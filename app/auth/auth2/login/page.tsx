@@ -15,7 +15,7 @@ const BoxedLogin = () => {
         <Card className="w-full max-w-md border-none shadow-lg p-6">
           {/* Logo */}
           <div className="mx-auto  w-fit">
-            <FullLogo />
+            <FullLogo showName />
           </div>
 
           <LoginForm />
