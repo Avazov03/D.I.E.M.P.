@@ -183,6 +183,7 @@ export const taskColumns: Column[] = [
   { key: "xatar", label: "Xatar", kind: "status" },
   { key: "jismoniy", label: "Jismoniy" },
   { key: "moliyaviy", label: "Moliyaviy" },
+  { key: "manba", label: "Manba" },
 ]
 
 export const reportColumns: Column[] = [

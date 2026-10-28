@@ -32,8 +32,8 @@ export const users: User[] = [
 
 const grants: Record<Role, string[]> = {
   super_admin: ["*"],
-  rahbariyat: ["/", "/qarorlar", "/topshiriqlar", "/hisobotlar", "/dalillar", "/kpi", "/xatarlar", "/tahlil", "/audit"],
-  nazorat: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar", "/xatarlar", "/audit"],
+  rahbariyat: ["/", "/hujjatlar", "/qarorlar", "/topshiriqlar", "/hisobotlar", "/dalillar", "/kpi", "/xatarlar", "/tahlil", "/audit"],
+  nazorat: ["/", "/hujjatlar", "/topshiriqlar", "/hisobotlar", "/dalillar", "/xatarlar", "/audit"],
   koordinator: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar"],
   ijrochi: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar"],
   tahlilchi: ["/", "/kpi", "/xatarlar", "/tahlil"],
@@ -55,6 +55,10 @@ export function publicUser(user: User) {
 export function canOpen(rol: Role, pathname: string) {
   if (rol === "super_admin") return true
   return grants[rol].some((path) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)))
+}
+
+export function canUpload(rol: Role) {
+  return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat"
 }
 
 export function canAskAi(rol: Role) {

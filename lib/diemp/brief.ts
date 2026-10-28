@@ -13,6 +13,7 @@ import {
   type DataRow,
 } from "@/lib/diemp/sample"
 import { extraReports } from "@/lib/diemp/inbox"
+import { storedDecisions, storedTasks } from "@/lib/diemp/db"
 
 export type OfficialFigures = {
   jismoniy: number | null
@@ -63,6 +64,11 @@ export function analysisBrief() {
     }
   })
 
+  const yuklanganQarorlar = storedDecisions().map((row) => {
+    remember(row.raqam)
+    return { id: row.raqam, turi: "Qaror", nomi: row.nomi, sana: row.sana || "aniqlanmagan", holat: "Ijroda", manba: "Yuklangan hujjat" }
+  })
+
   const topshiriqlar = rows.map((row) => {
     remember(row.raqam)
     remember(row.qaror)
@@ -77,6 +83,22 @@ export function analysisBrief() {
       xatar: label(row.xatar),
       jismoniy: confirmedPercent(row, "jismoniy", "jismoniyTasdiq"),
       moliyaviy: confirmedPercent(row, "moliyaviy", "moliyaviyTasdiq"),
+    }
+  })
+
+  const yuklanganTopshiriqlar = storedTasks().map((row) => {
+    remember(row.raqam)
+    remember(row.qaror)
+    return {
+      id: row.raqam,
+      qaror: row.qaror,
+      matn: row.matn,
+      tashkilot: orgName.get(row.tashkilot) ?? row.tashkilot,
+      muddat: row.muddat || "aniqlanmagan",
+      holat: "Ijroda",
+      jismoniy: "tasdiqlanmagan, rasmiy foizga kirmaydi",
+      moliyaviy: "tasdiqlanmagan, rasmiy foizga kirmaydi",
+      manba: "Yuklangan hujjat, odam tasdiqlagan",
     }
   })
 
@@ -142,7 +164,7 @@ export function analysisBrief() {
     })
 
   const kontekst = {
-    manba: "Namuna to'plami. Bu jonli davlat bazasi emas.",
+    manba: "Namuna to'plami va odam tasdiqlagan yuklangan hujjatlar. Bu jonli davlat bazasi emas.",
     maxfiy: "Maxfiy yozuvlar bu kontekstga kiritilmagan. Matnini taxmin qilma.",
     rasmiy: {
       jismoniy_bajarilish_foiz: figures.jismoniy,
@@ -150,8 +172,8 @@ export function analysisBrief() {
       muddatga_rioya_foiz: figures.muddat,
       qoida: "Bu uchta foiz kodda hisoblangan. Boshqa foiz yozma. Jismoniy va moliyaviy ko'rsatkich bir xil emas. Tasdiqlanmagan qiymat rasmiy foizga kirmaydi. Reja 0 yoki formula tasdiqlanmagan bo'lsa natija Hisoblanmaydi.",
     },
-    qarorlar,
-    topshiriqlar,
+    qarorlar: [...qarorlar, ...yuklanganQarorlar],
+    topshiriqlar: [...topshiriqlar, ...yuklanganTopshiriqlar],
     hisobotlar,
     dalillar,
     korsatkichlar,
@@ -163,6 +185,8 @@ export function analysisBrief() {
 }
 
 export function sourceHref(id: string) {
+  if (storedTasks().some((row) => row.raqam === id)) return "/topshiriqlar"
+  if (storedDecisions().some((row) => row.raqam === id)) return "/qarorlar"
   if (/^NM-\d{2}-\d{2}$/.test(id)) return "/topshiriqlar"
   if (/^NM-\d{2}$/.test(id)) return "/qarorlar"
   if (/^HS-\d+$/.test(id)) return "/hisobotlar"
