@@ -7,8 +7,10 @@ import { ControlGrid } from "@/app/components/diemp/control-grid"
 import { DashboardHeading } from "@/app/components/diemp/dashboard-heading"
 import { EventsTable } from "@/app/components/diemp/events-table"
 import { ExecutionChart } from "@/app/components/diemp/execution-chart"
+import { StatusShare } from "@/app/components/diemp/status-share"
 import { IndicatorGrid } from "@/app/components/diemp/indicator-grid"
 import { OrgTable } from "@/app/components/diemp/org-table"
+import { monthSeries, statusShare } from "@/lib/diemp/charts"
 import { organizations } from "@/lib/diemp/sample"
 import { tasksFor } from "@/lib/diemp/scope"
 import { currentUser } from "@/lib/diemp/session"
@@ -22,6 +24,8 @@ export default async function Page() {
   const user = await currentUser()
   if (!user) redirect("/auth/auth2/login")
   const rows = await tasksFor(user)
+  const series = monthSeries(rows)
+  const share = statusShare(rows)
 
   if (user.rol === "ijrochi") return <ExecutorCabinet rows={rows} />
   if (user.rol === "koordinator") {
@@ -37,9 +41,12 @@ export default async function Page() {
         <CabinetHeading rol="tahlilchi" text="KPI, tendensiya va AI tahlil. Rasmiy foiz kodda hisoblanadi." />
         <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
           <div className="lg:col-span-7 col-span-12">
-            <ExecutionChart />
+            <ExecutionChart series={series} />
           </div>
           <div className="lg:col-span-5 col-span-12">
+            <StatusShare total={share.total} parts={share.parts} />
+          </div>
+          <div className="col-span-12">
             <IndicatorGrid />
           </div>
         </StyleAwareWrapper>
@@ -58,9 +65,12 @@ export default async function Page() {
         </div>
         <StyleDivider wrapperClassName="col-span-12" />
         <div className="lg:col-span-7 col-span-12">
-          <ExecutionChart />
+          <ExecutionChart series={series} />
         </div>
         <div className="lg:col-span-5 col-span-12">
+          <StatusShare total={share.total} parts={share.parts} />
+        </div>
+        <div className="col-span-12">
           <IndicatorGrid />
         </div>
         <StyleDivider wrapperClassName="col-span-12" />

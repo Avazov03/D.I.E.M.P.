@@ -1,13 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Box } from "lucide-react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { TrendingUp } from "lucide-react"
+import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from "recharts"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import { executionSeries } from "@/lib/diemp/sample"
+import { closedChange, sliceSeries, type MonthPoint, type Period } from "@/lib/diemp/charts"
 
 const chartConfig = {
   yopilgan: { label: "Tasdiqlangan yakun", color: "var(--color-primary)" },
@@ -20,26 +22,36 @@ const periods = [
   { value: "1", label: "Joriy oy" },
 ] as const
 
-export function ExecutionChart() {
-  const [period, setPeriod] = useState<(typeof periods)[number]["value"]>("10")
-  const data = executionSeries(period)
+export function ExecutionChart({ series }: { series: MonthPoint[] }) {
+  const router = useRouter()
+  const [period, setPeriod] = useState<Period>("10")
+  const data = sliceSeries(series, period)
+  const closed = data.reduce((sum, point) => sum + point.yopilgan, 0)
+  const change = closedChange(data)
+  const peak = Math.max(1, ...data.flatMap((point) => [point.yopilgan, point.otgan]))
+  const mark = data.reduce((best, point) => (point.otgan > best.otgan ? point : best), data[0])
   const periodLabel = periods.find((item) => item.value === period)?.label
 
   return (
     <DashboardCard className="flex flex-col gap-0!">
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2">
-          <Box size={16} className="text-muted-foreground" />
+          <TrendingUp size={16} className="text-muted-foreground" />
           Ijro dinamikasi
         </CardTitle>
       </CardHeader>
       <CardContent className="p-5 flex flex-col gap-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex flex-col gap-1">
-            <span className="text-base font-normal text-foreground leading-6">Oy kesimida topshiriqlar</span>
-            <span className="text-sm font-normal text-muted-foreground">Ikki chiziq birlashtirilmaydi: yakun va kechikish alohida.</span>
+            <span className="text-base font-normal text-foreground leading-6">Tasdiqlangan yakun</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link href="/topshiriqlar?holat=yakunlangan" className="text-2xl font-semibold tracking-[-0.3px] text-foreground leading-8">
+                {closed}
+              </Link>
+              {change === null ? <span className="text-sm text-muted-foreground">Oldingi oyga nisbatan hisoblanmaydi</span> : <span className="text-sm font-medium text-chart-2">{change > 0 ? `+${change}%` : `${change}%`} oldingi oyga nisbatan</span>}
+            </div>
           </div>
-          <Select value={period} onValueChange={(value) => value && setPeriod(value as typeof period)}>
+          <Select value={period} onValueChange={(value) => value && setPeriod(value as Period)}>
             <SelectTrigger className="h-auto! w-fit text-sm font-medium text-foreground border-border shadow-[0px_1px_2px_rgba(0,0,0,0.05)] cursor-pointer gap-1.5 px-3">
               <SelectValue>{periodLabel}</SelectValue>
             </SelectTrigger>
@@ -54,10 +66,11 @@ export function ExecutionChart() {
           <LineChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -10 }}>
             <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
             <XAxis dataKey="oy" tickLine={false} axisLine={false} tickMargin={10} interval={0} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
-            <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={4} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} width={32} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Line dataKey="yopilgan" type="linear" stroke="var(--color-yopilgan)" strokeWidth={1.5} dot={{ r: 3, fill: "var(--color-yopilgan)", strokeWidth: 0 }} />
-            <Line dataKey="otgan" type="linear" stroke="var(--color-otgan)" strokeWidth={1.5} strokeDasharray="4 4" dot={{ r: 3, fill: "var(--color-otgan)", strokeWidth: 0 }} />
+            <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={4} domain={[0, peak]} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} width={32} />
+            <ChartTooltip cursor={{ stroke: "var(--border)", strokeWidth: 1, strokeDasharray: "4 4" }} content={<ChartTooltipContent />} />
+            {mark && mark.otgan > 0 ? <ReferenceLine x={mark.oy} stroke="var(--border)" strokeWidth={1} strokeDasharray="4 4" /> : null}
+            <Line dataKey="yopilgan" type="linear" stroke="var(--color-yopilgan)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--color-yopilgan)", strokeWidth: 0 }} className="cursor-pointer" onClick={() => router.push("/topshiriqlar?holat=yakunlangan")} />
+            <Line dataKey="otgan" type="linear" stroke="var(--color-otgan)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} activeDot={{ r: 4, fill: "var(--color-otgan)", strokeWidth: 0 }} className="cursor-pointer" onClick={() => router.push("/topshiriqlar?holat=muddati_otgan")} />
           </LineChart>
         </ChartContainer>
       </CardContent>

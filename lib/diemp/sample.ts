@@ -135,15 +135,6 @@ export function deadlineRate(rows: DataRow[]) {
   return Math.round((onTime / closed.length) * 100)
 }
 
-export function executionSeries(period: "10" | "3" | "1") {
-  const slice = period === "1" ? months.slice(-1) : period === "3" ? months.slice(-3) : [...months]
-  return slice.map((oy) => ({
-    oy,
-    yopilgan: tasks.filter((row) => row.oy === oy && row.holat === "yakunlangan" && row.maxfiylik !== "maxfiy").length,
-    otgan: tasks.filter((row) => row.oy === oy && row.holat === "muddati_otgan" && row.maxfiylik !== "maxfiy").length,
-  }))
-}
-
 export function organizationRows(): DataRow[] {
   return organizations.map((org) => {
     const orgTasks = visibleTasks().filter((row) => row.tashkilot === org.kod)
