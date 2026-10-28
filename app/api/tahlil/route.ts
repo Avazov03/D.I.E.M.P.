@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server"
+import { canAskAi } from "@/lib/diemp/access"
 import { askAnalyst } from "@/lib/diemp/gemini"
+import { currentUser } from "@/lib/diemp/session"
 
 export async function POST(request: Request) {
+  const user = await currentUser()
+  if (!user) return NextResponse.json({ xato: "Kirish kerak" }, { status: 401 })
+  if (!canAskAi(user.rol)) return NextResponse.json({ xato: "Bu rol AI tahlilni ko'rmaydi" }, { status: 403 })
+
   let question = ""
   try {
     const body = (await request.json()) as { savol?: unknown }

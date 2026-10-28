@@ -3,8 +3,7 @@ import * as React from "react";
 import { Suspense } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader } from "@/components/ui/sidebar";
 import FullLogo from "../../shared/logo/full-logo";
-import sidebaritems from "./sidebaritems";
-import NavCollapse from "./nav-collapse";
+import { RoleMenu } from "@/app/components/diemp/role-menu";
 import SimpleBar from "simplebar-react";
 import { NavSecondary } from "./nav-secondary"
 import { NavUser } from "./nav-user";
@@ -45,7 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <div className="px-0 group-data-[state=collapsed]:px-0 w-full flex flex-col gap-4">
                             {/* usePathname suspends under Cache Components when dynamic params are unknown */}
                             <Suspense fallback={<NavSkeleton />}>
-                                <NavCollapse menu={sidebaritems} className="text-sm" />
+                                <RoleMenu className="text-sm" />
                             </Suspense>
                         </div>
                     </SidebarGroup>

@@ -1,10 +1,19 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Gauge } from "lucide-react"
+import { canOpen, type Role } from "@/lib/diemp/access"
 import { averageApproved, visibleTasks } from "@/lib/diemp/sample"
 
 export function NavSecondary() {
+  const [rol, setRol] = useState<Role | null>(null)
+  useEffect(() => {
+    void fetch("/api/sessiya")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { rol?: Role } | null) => setRol(data?.rol ?? null))
+  }, [])
+  if (!rol || !canOpen(rol, "/kpi")) return null
   const value = averageApproved(visibleTasks(), "jismoniy", "jismoniyTasdiq") ?? 0
 
   return (

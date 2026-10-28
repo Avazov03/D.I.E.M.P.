@@ -12,6 +12,7 @@ import {
   visibleTasks,
   type DataRow,
 } from "@/lib/diemp/sample"
+import { extraReports } from "@/lib/diemp/inbox"
 
 export type OfficialFigures = {
   jismoniy: number | null
@@ -79,7 +80,7 @@ export function analysisBrief() {
     }
   })
 
-  const hisobotlar = reports.map((row) => {
+  const hisobotlar = [...reports, ...extraReports()].map((row) => {
     remember(row.raqam)
     remember(row.topshiriq)
     return {

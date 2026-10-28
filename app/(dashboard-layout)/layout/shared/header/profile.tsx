@@ -14,7 +14,26 @@ import { profileDD } from "@/app/(dashboard-layout)/layout/shared/header/data";
 import { cn } from "@/lib/utils";
 import { Mailbox, X } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+
 export default function ProfileSheet() {
+  const [name, setName] = useState("Namuna")
+  const [role, setRole] = useState("Namuna seans")
+
+  useEffect(() => {
+    void fetch("/api/sessiya")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { ism?: string; rolNomi?: string } | null) => {
+        if (!data) return
+        setName(data.ism || "Namuna")
+        setRole(data.rolNomi || "Namuna seans")
+      })
+  }, [])
+
+  async function leave() {
+    await fetch("/api/kirish", { method: "DELETE" })
+    window.location.href = "/auth/auth2/login"
+  }
 
 
   return (
@@ -24,7 +43,7 @@ export default function ProfileSheet() {
         <Avatar className="h-8 w-8">
           <AvatarImage src={"/images/profile/avtar.webp"} alt="profile" />
           <AvatarFallback className="bg-primary text-primary-foreground">
-            R
+            {name.slice(0, 1)}
           </AvatarFallback>
         </Avatar>
       </SheetTrigger>
@@ -49,20 +68,20 @@ export default function ProfileSheet() {
                 height={30}
               />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                R
+                {name.slice(0, 1)}
               </AvatarFallback>
             </Avatar>
 
             <div className="text-center">
               <h6 className="text-lg font-semibold">
-                Rahbariyat
+                {name}
               </h6>
               <div className="flex items-center gap-2 justify-center">
                 <Mailbox
                   size={18} className="text-muted-foreground"
                 />
                 <span className="text-sm font-normal text-muted-foreground">
-                  Namuna seans
+                  {role}
                 </span>
               </div>
             </div>
@@ -113,13 +132,13 @@ export default function ProfileSheet() {
             <div className="rounded-sm pt-6 flex flex-col justify-center items-center gap-3 px-6">
               <div className="text-center">
                 <h5 className="text-xl font-semibold">
-                  Namuna seans
+                  {role}
                 </h5>
                 <p className="text-sm text-muted-foreground">
-                  Haqiqiy kirish keyingi bosqichda ulanadi
+                  Namuna kabinet. Parol: namuna
                 </p>
               </div>
-              <Button variant="secondary" className="text-primary" render={<Link href="/auth/auth2/login" />}>
+              <Button variant="secondary" className="text-primary" onClick={() => void leave()}>
                 Chiqish
               </Button>
             </div>

@@ -1,18 +1,23 @@
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { Suspense } from "react"
 import { Registry } from "@/app/components/diemp/registry"
-import { taskColumns, taskFilters, visibleTasks } from "@/lib/diemp/sample"
+import { tasksFor } from "@/lib/diemp/scope"
+import { taskColumns, taskFilters } from "@/lib/diemp/sample"
+import { currentUser } from "@/lib/diemp/session"
 
 export const metadata: Metadata = { title: "Topshiriqlar" }
 
-export default function Page() {
+export default async function Page() {
+  const user = await currentUser()
+  if (!user) redirect("/auth/auth2/login")
   return (
     <Suspense>
       <Registry
         title="Topshiriqlar"
-        description="Jismoniy va moliyaviy foiz alohida. Maxfiy bandlar bu seansda ko'rsatilmaydi."
+        description="Jismoniy va moliyaviy foiz alohida. Ro'yxat shu rol ko'ra oladigan bandlar bilan cheklangan."
         columns={taskColumns}
-        rows={visibleTasks()}
+        rows={tasksFor(user)}
         filters={taskFilters}
         filename="diemp-topshiriqlar.csv"
       />

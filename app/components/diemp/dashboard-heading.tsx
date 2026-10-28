@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { downloadCsv } from "@/lib/diemp/csv"
 import { exportableRows, taskColumns, tasks } from "@/lib/diemp/sample"
 
-export function DashboardHeading() {
+export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
   const [greeting, setGreeting] = useState("Xayrli kun")
   const [note, setNote] = useState("")
 
@@ -25,7 +25,7 @@ export function DashboardHeading() {
       <div className="flex items-center flex-wrap lg:flex-nowrap lg:gap-0 gap-4 justify-between">
         <div className="flex flex-col items-start">
           <h2 className="text-xl flex items-center gap-2">
-            {greeting}, Rahbariyat
+            {greeting}, {name}
             <span className="flex items-center">
               {daytime ? <Sun size={25} color="orange" /> : <Moon size={25} />}
             </span>

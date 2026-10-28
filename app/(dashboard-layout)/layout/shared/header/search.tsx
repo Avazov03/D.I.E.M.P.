@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Component, Search as SearchIcon } from 'lucide-react';
+import { canOpen, type Role } from "@/lib/diemp/access";
 
 import SimpleBar from "simplebar-react";
 import SidebarContent from "../../vertical/sidebar/sidebaritems";
@@ -11,6 +12,13 @@ import { Input } from "@/components/ui/input";
 
 function Search() {
   const [query, setQuery] = useState("");
+  const [rol, setRol] = useState<Role | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/sessiya")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { rol?: Role } | null) => setRol(data?.rol ?? null));
+  }, []);
 
   // 🔍 Recursive search through menu
   const searchItems = (items: any[], q: string, parentPath = "") => {
@@ -46,9 +54,9 @@ function Search() {
 
   // Memoize filtered results
   const results = useMemo(() => {
-    if (!query.trim()) return [];
-    return searchItems(SidebarContent, query);
-  }, [query]);
+    if (!query.trim() || !rol) return [];
+    return searchItems(SidebarContent, query).filter((item) => canOpen(rol, item.url));
+  }, [query, rol]);
 
   return (
     <div className="relative w-full">

@@ -1,14 +1,22 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { ScrollText, Sparkles } from "lucide-react"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroupContent, SidebarGroup } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { canOpen, type Role } from "@/lib/diemp/access"
 
 export function NavUser() {
+  const [rol, setRol] = useState<Role | null>(null)
+  useEffect(() => {
+    void fetch("/api/sessiya")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { rol?: Role } | null) => setRol(data?.rol ?? null))
+  }, [])
   const navItems = [
     { title: "AI tahlil", url: "/tahlil", icon: Sparkles },
     { title: "Audit jurnali", url: "/audit", icon: ScrollText },
-  ]
+  ].filter((item) => rol && canOpen(rol, item.url))
 
   return (
     <SidebarGroup className="mt-auto p-0">

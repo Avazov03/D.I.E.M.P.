@@ -32,6 +32,9 @@ dev.log
 .env*.local
 .env
 
+# namuna hisobotlar (jarayon davomida yoziladi)
+/data/inbox.json
+
 # vercel
 .vercel
 
