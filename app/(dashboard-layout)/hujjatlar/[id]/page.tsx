@@ -12,7 +12,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (!user) redirect("/auth/auth2/login")
   if (!canUpload(user.rol)) redirect("/")
   const { id } = await params
-  const row = documentById(id)
+  const row = await documentById(id)
   if (!row) notFound()
   return (
     <DocumentReview

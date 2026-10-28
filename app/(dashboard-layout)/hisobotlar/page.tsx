@@ -17,7 +17,7 @@ export default async function Page() {
         title="Hisobotlar"
         description="Faqat tasdiqlangan hisobot rasmiy ko'rsatkichga kiradi. Ro'yxat shu rol doirasida."
         columns={reportColumns}
-        rows={reportsFor(user)}
+        rows={await reportsFor(user)}
         filters={reportFilters}
         filename="diemp-hisobotlar.csv"
       />

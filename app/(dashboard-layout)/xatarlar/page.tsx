@@ -17,7 +17,7 @@ export default async function Page() {
         title="Xatarlar"
         description="Hozircha qoidaviy xatarlar. Tarix yetarli bo'lmaganda bu ogohlantirish prognozdek ko'rsatilmaydi."
         columns={riskColumns}
-        rows={risksFor(user)}
+        rows={await risksFor(user)}
         filters={riskFilters}
         filename="diemp-xatarlar.csv"
       />

@@ -1,6 +1,6 @@
-import { mkdirSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import Database from "better-sqlite3"
+import initSqlJs, { type Database as SqlDatabase } from "sql.js"
 import type { Draft } from "@/lib/diemp/draft"
 
 export type { Draft, DraftTask } from "@/lib/diemp/draft"
@@ -20,41 +20,79 @@ export type StoredDocument = {
 
 const dir = process.env.DIEMP_DATA_DIR || path.join(process.cwd(), "data")
 mkdirSync(dir, { recursive: true })
+const file = path.join(dir, "diemp.sqlite")
 
-const database = new Database(path.join(dir, "diemp.sqlite"))
-database.pragma("journal_mode = WAL")
-database.exec(`
-  CREATE TABLE IF NOT EXISTS hujjat (
-    id TEXT PRIMARY KEY,
-    nom TEXT NOT NULL,
-    tur TEXT NOT NULL,
-    fayl TEXT NOT NULL,
-    matn TEXT NOT NULL,
-    holat TEXT NOT NULL,
-    yuklovchi TEXT NOT NULL,
-    yaratilgan TEXT NOT NULL,
-    cheklov TEXT NOT NULL DEFAULT ''
-  );
-  CREATE TABLE IF NOT EXISTS ajratma (
-    hujjat TEXT PRIMARY KEY,
-    json TEXT NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS qaror (
-    raqam TEXT PRIMARY KEY,
-    hujjat TEXT NOT NULL,
-    nomi TEXT NOT NULL,
-    sana TEXT NOT NULL,
-    topshiriq INTEGER NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS topshiriq (
-    raqam TEXT PRIMARY KEY,
-    qaror TEXT NOT NULL,
-    hujjat TEXT NOT NULL,
-    matn TEXT NOT NULL,
-    tashkilot TEXT NOT NULL,
-    muddat TEXT NOT NULL
-  );
-`)
+let opening: Promise<SqlDatabase> | null = null
+
+async function open() {
+  if (!opening) {
+    opening = (async () => {
+      const SQL = await initSqlJs({
+        locateFile: () => path.join(process.cwd(), "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
+      })
+      const database = existsSync(file) ? new SQL.Database(readFileSync(file)) : new SQL.Database()
+      database.run(`
+        CREATE TABLE IF NOT EXISTS hujjat (
+          id TEXT PRIMARY KEY,
+          nom TEXT NOT NULL,
+          tur TEXT NOT NULL,
+          fayl TEXT NOT NULL,
+          matn TEXT NOT NULL,
+          holat TEXT NOT NULL,
+          yuklovchi TEXT NOT NULL,
+          yaratilgan TEXT NOT NULL,
+          cheklov TEXT NOT NULL DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS ajratma (
+          hujjat TEXT PRIMARY KEY,
+          json TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS qaror (
+          raqam TEXT PRIMARY KEY,
+          hujjat TEXT NOT NULL,
+          nomi TEXT NOT NULL,
+          sana TEXT NOT NULL,
+          topshiriq INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS topshiriq (
+          raqam TEXT PRIMARY KEY,
+          qaror TEXT NOT NULL,
+          hujjat TEXT NOT NULL,
+          matn TEXT NOT NULL,
+          tashkilot TEXT NOT NULL,
+          muddat TEXT NOT NULL
+        );
+      `)
+      return database
+    })()
+  }
+  return opening
+}
+
+function text(value: unknown) {
+  return value == null ? "" : String(value)
+}
+
+function one(database: SqlDatabase, sql: string, params: (string | number)[] = []) {
+  const statement = database.prepare(sql)
+  statement.bind(params)
+  const row = statement.step() ? statement.getAsObject() : undefined
+  statement.free()
+  return row
+}
+
+function many(database: SqlDatabase, sql: string, params: (string | number)[] = []) {
+  const statement = database.prepare(sql)
+  statement.bind(params)
+  const rows = []
+  while (statement.step()) rows.push(statement.getAsObject())
+  statement.free()
+  return rows
+}
+
+function persist(database: SqlDatabase) {
+  writeFileSync(file, Buffer.from(database.export()))
+}
 
 function draftFrom(json: string | undefined): Draft | null {
   if (!json) return null
@@ -72,60 +110,91 @@ export function dataDir() {
   return dir
 }
 
-export function saveDocument(row: Omit<StoredDocument, "ajratma">, draft: Draft | null) {
-  const insert = database.prepare(`
-    INSERT INTO hujjat (id, nom, tur, fayl, matn, holat, yuklovchi, yaratilgan, cheklov)
-    VALUES (@id, @nom, @tur, @fayl, @matn, @holat, @yuklovchi, @yaratilgan, @cheklov)
-  `)
-  const insertDraft = database.prepare("INSERT INTO ajratma (hujjat, json) VALUES (?, ?)")
-  const run = database.transaction(() => {
-    insert.run(row)
-    if (draft) insertDraft.run(row.id, JSON.stringify(draft))
-  })
-  run()
+export async function saveDocument(row: Omit<StoredDocument, "ajratma">, draft: Draft | null) {
+  const database = await open()
+  database.run(
+    "INSERT INTO hujjat (id, nom, tur, fayl, matn, holat, yuklovchi, yaratilgan, cheklov) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [row.id, row.nom, row.tur, row.fayl, row.matn, row.holat, row.yuklovchi, row.yaratilgan, row.cheklov],
+  )
+  if (draft) database.run("INSERT INTO ajratma (hujjat, json) VALUES (?, ?)", [row.id, JSON.stringify(draft)])
+  persist(database)
 }
 
-export function listDocuments() {
-  return database.prepare("SELECT id, nom, tur, holat, yuklovchi, yaratilgan, cheklov FROM hujjat ORDER BY yaratilgan DESC").all() as Pick<StoredDocument, "id" | "nom" | "tur" | "holat" | "yuklovchi" | "yaratilgan" | "cheklov">[]
+export async function listDocuments() {
+  const database = await open()
+  return many(database, "SELECT id, nom, tur, holat, yuklovchi, yaratilgan, cheklov FROM hujjat ORDER BY yaratilgan DESC").map((row) => ({
+    id: text(row.id),
+    nom: text(row.nom),
+    tur: text(row.tur) as "pdf" | "docx",
+    holat: text(row.holat),
+    yuklovchi: text(row.yuklovchi),
+    yaratilgan: text(row.yaratilgan),
+    cheklov: text(row.cheklov),
+  }))
 }
 
-export function documentById(id: string): StoredDocument | null {
-  const row = database.prepare("SELECT * FROM hujjat WHERE id = ?").get(id) as Omit<StoredDocument, "ajratma"> | undefined
+export async function documentById(id: string): Promise<StoredDocument | null> {
+  const database = await open()
+  const row = one(database, "SELECT * FROM hujjat WHERE id = ?", [id])
   if (!row) return null
-  const draft = database.prepare("SELECT json FROM ajratma WHERE hujjat = ?").get(id) as { json: string } | undefined
-  return { ...row, ajratma: draftFrom(draft?.json) }
+  const draft = one(database, "SELECT json FROM ajratma WHERE hujjat = ?", [id])
+  const tur = text(row.tur) === "pdf" ? "pdf" : "docx"
+  return {
+    id: text(row.id),
+    nom: text(row.nom),
+    tur,
+    fayl: text(row.fayl),
+    matn: text(row.matn),
+    holat: text(row.holat),
+    yuklovchi: text(row.yuklovchi),
+    yaratilgan: text(row.yaratilgan),
+    cheklov: text(row.cheklov),
+    ajratma: draftFrom(draft ? text(draft.json) : undefined),
+  }
 }
 
-export function decisionOwner(raqam: string) {
-  return database.prepare("SELECT hujjat FROM qaror WHERE raqam = ?").get(raqam) as { hujjat: string } | undefined
-}
-
-export function confirmDocument(id: string, draft: Draft) {
-  const existing = decisionOwner(draft.raqam)
-  if (existing && existing.hujjat !== id) return { ok: false as const, xato: "Bu qaror raqami boshqa hujjatda bor. Eski yozuv o'zgartirilmadi." }
+export async function confirmDocument(id: string, draft: Draft) {
+  const database = await open()
+  const existing = one(database, "SELECT hujjat FROM qaror WHERE raqam = ?", [draft.raqam])
+  if (existing && text(existing.hujjat) !== id) return { ok: false as const, xato: "Bu qaror raqami boshqa hujjatda bor. Eski yozuv o'zgartirilmadi." }
   const tasks = draft.topshiriqlar.filter((task) => task.matn.trim())
-  const write = database.transaction(() => {
-    database.prepare("UPDATE hujjat SET holat = 'tasdiqlangan' WHERE id = ?").run(id)
-    database.prepare("INSERT INTO ajratma (hujjat, json) VALUES (?, ?) ON CONFLICT(hujjat) DO UPDATE SET json = excluded.json").run(id, JSON.stringify({ ...draft, topshiriqlar: tasks }))
-    database.prepare("DELETE FROM topshiriq WHERE hujjat = ?").run(id)
-    database.prepare(`
-      INSERT INTO qaror (raqam, hujjat, nomi, sana, topshiriq) VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(raqam) DO UPDATE SET nomi = excluded.nomi, sana = excluded.sana, topshiriq = excluded.topshiriq, hujjat = excluded.hujjat
-    `).run(draft.raqam, id, draft.nomi, draft.sana, tasks.length)
-    const insertTask = database.prepare("INSERT INTO topshiriq (raqam, qaror, hujjat, matn, tashkilot, muddat) VALUES (?, ?, ?, ?, ?, ?)")
-    tasks.forEach((task, index) => {
-      const nomer = `${draft.raqam}-${String(index + 1).padStart(2, "0")}`
-      insertTask.run(nomer, draft.raqam, id, task.matn.trim(), task.tashkilot, task.muddat.trim())
-    })
+  database.run("UPDATE hujjat SET holat = 'tasdiqlangan' WHERE id = ?", [id])
+  database.run("INSERT INTO ajratma (hujjat, json) VALUES (?, ?) ON CONFLICT(hujjat) DO UPDATE SET json = excluded.json", [id, JSON.stringify({ ...draft, topshiriqlar: tasks })])
+  database.run("DELETE FROM topshiriq WHERE hujjat = ?", [id])
+  database.run(
+    "INSERT INTO qaror (raqam, hujjat, nomi, sana, topshiriq) VALUES (?, ?, ?, ?, ?) ON CONFLICT(raqam) DO UPDATE SET nomi = excluded.nomi, sana = excluded.sana, topshiriq = excluded.topshiriq, hujjat = excluded.hujjat",
+    [draft.raqam, id, draft.nomi, draft.sana, tasks.length],
+  )
+  tasks.forEach((task, index) => {
+    const nomer = `${draft.raqam}-${String(index + 1).padStart(2, "0")}`
+    database.run(
+      "INSERT INTO topshiriq (raqam, qaror, hujjat, matn, tashkilot, muddat) VALUES (?, ?, ?, ?, ?, ?)",
+      [nomer, draft.raqam, id, task.matn.trim(), task.tashkilot, task.muddat.trim()],
+    )
   })
-  write()
+  persist(database)
   return { ok: true as const }
 }
 
-export function storedDecisions() {
-  return database.prepare("SELECT raqam, nomi, sana, topshiriq, hujjat FROM qaror ORDER BY raqam").all() as { raqam: string; nomi: string; sana: string; topshiriq: number; hujjat: string }[]
+export async function storedDecisions() {
+  const database = await open()
+  return many(database, "SELECT raqam, nomi, sana, topshiriq, hujjat FROM qaror ORDER BY raqam").map((row) => ({
+    raqam: text(row.raqam),
+    nomi: text(row.nomi),
+    sana: text(row.sana),
+    topshiriq: Number(row.topshiriq) || 0,
+    hujjat: text(row.hujjat),
+  }))
 }
 
-export function storedTasks() {
-  return database.prepare("SELECT raqam, qaror, matn, tashkilot, muddat, hujjat FROM topshiriq ORDER BY raqam").all() as { raqam: string; qaror: string; matn: string; tashkilot: string; muddat: string; hujjat: string }[]
+export async function storedTasks() {
+  const database = await open()
+  return many(database, "SELECT raqam, qaror, matn, tashkilot, muddat, hujjat FROM topshiriq ORDER BY raqam").map((row) => ({
+    raqam: text(row.raqam),
+    qaror: text(row.qaror),
+    matn: text(row.matn),
+    tashkilot: text(row.tashkilot),
+    muddat: text(row.muddat),
+    hujjat: text(row.hujjat),
+  }))
 }

@@ -45,7 +45,7 @@ export function officialFigures(): OfficialFigures {
   }
 }
 
-export function analysisBrief() {
+export async function analysisBrief() {
   const rows = visibleTasks()
   const figures = officialFigures()
   const ids = new Set<string>()
@@ -64,7 +64,7 @@ export function analysisBrief() {
     }
   })
 
-  const yuklanganQarorlar = storedDecisions().map((row) => {
+  const yuklanganQarorlar = (await storedDecisions()).map((row) => {
     remember(row.raqam)
     return { id: row.raqam, turi: "Qaror", nomi: row.nomi, sana: row.sana || "aniqlanmagan", holat: "Ijroda", manba: "Yuklangan hujjat" }
   })
@@ -86,7 +86,7 @@ export function analysisBrief() {
     }
   })
 
-  const yuklanganTopshiriqlar = storedTasks().map((row) => {
+  const yuklanganTopshiriqlar = (await storedTasks()).map((row) => {
     remember(row.raqam)
     remember(row.qaror)
     return {
@@ -184,9 +184,9 @@ export function analysisBrief() {
   return { kontekst, ids, figures }
 }
 
-export function sourceHref(id: string) {
-  if (storedTasks().some((row) => row.raqam === id)) return "/topshiriqlar"
-  if (storedDecisions().some((row) => row.raqam === id)) return "/qarorlar"
+export async function sourceHref(id: string) {
+  if ((await storedTasks()).some((row) => row.raqam === id)) return "/topshiriqlar"
+  if ((await storedDecisions()).some((row) => row.raqam === id)) return "/qarorlar"
   if (/^NM-\d{2}-\d{2}$/.test(id)) return "/topshiriqlar"
   if (/^NM-\d{2}$/.test(id)) return "/qarorlar"
   if (/^HS-\d+$/.test(id)) return "/hisobotlar"

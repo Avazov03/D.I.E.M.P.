@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   },
   // Build-time React Compiler (pairs with turbopackRustReactCompiler)
   reactCompiler: true,
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["sql.js"],
 };
 
 export default nextConfig;

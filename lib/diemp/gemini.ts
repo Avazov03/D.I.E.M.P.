@@ -72,7 +72,7 @@ export async function askAnalyst(question: string): Promise<AnalysisAnswer> {
   const key = process.env.GEMINI_API_KEY
   if (!key) throw new Error("Kalit sozlanmagan")
 
-  const { kontekst, ids, figures } = analysisBrief()
+  const { kontekst, ids, figures } = await analysisBrief()
   const payload = JSON.stringify({ savol: question, kontekst })
   let lastStatus = 0
 
@@ -103,10 +103,11 @@ export async function askAnalyst(question: string): Promise<AnalysisAnswer> {
     }
     if (typeof parsed.javob !== "string" || !parsed.javob.trim()) throw new Error("AI javobi bo'sh")
 
-    const manbalar = cleanList(parsed.manbalar, 8)
-      .filter((id) => ids.has(id))
-      .map((id) => ({ id, href: sourceHref(id) }))
-      .filter((item): item is { id: string; href: string } => item.href !== null)
+    const manbalar = []
+    for (const id of cleanList(parsed.manbalar, 8).filter((item) => ids.has(item))) {
+      const href = await sourceHref(id)
+      if (href) manbalar.push({ id, href })
+    }
 
     return {
       javob: parsed.javob.trim().slice(0, 2000),

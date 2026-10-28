@@ -17,7 +17,7 @@ export default async function Page() {
         title="Qarorlar"
         description="Hujjat reyestri. Maxfiy yozuv faqat ruxsatli rolda ko'rinadi va eksportga kirmaydi."
         columns={decisionColumns}
-        rows={decisionsFor(user)}
+        rows={await decisionsFor(user)}
         filters={decisionFilters}
         filename="diemp-qarorlar.csv"
       />

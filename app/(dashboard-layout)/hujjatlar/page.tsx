@@ -13,7 +13,7 @@ export default async function Page() {
   const user = await currentUser()
   if (!user) redirect("/auth/auth2/login")
   if (!canUpload(user.rol)) redirect("/")
-  const rows = listDocuments()
+  const rows = await listDocuments()
   return (
     <div className="flex flex-col gap-4">
       <div>

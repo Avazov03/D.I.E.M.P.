@@ -13,7 +13,7 @@ export async function GET() {
   const user = await currentUser()
   if (!user) return NextResponse.json({ xato: "Kirish kerak" }, { status: 401 })
   if (!canUpload(user.rol)) return NextResponse.json({ xato: "Hujjatlar bu rolga yopiq" }, { status: 403 })
-  return NextResponse.json(listDocuments())
+  return NextResponse.json(await listDocuments())
 }
 
 export async function POST(request: Request) {
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     }
   }
 
-  saveDocument({
+  await saveDocument({
     id,
     nom: file.name.slice(0, 180),
     tur,

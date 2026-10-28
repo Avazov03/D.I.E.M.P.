@@ -17,7 +17,7 @@ export default async function Page() {
         title="Topshiriqlar"
         description="Jismoniy va moliyaviy foiz alohida. Ro'yxat shu rol ko'ra oladigan bandlar bilan cheklangan."
         columns={taskColumns}
-        rows={tasksFor(user)}
+        rows={await tasksFor(user)}
         filters={taskFilters}
         filename="diemp-topshiriqlar.csv"
       />

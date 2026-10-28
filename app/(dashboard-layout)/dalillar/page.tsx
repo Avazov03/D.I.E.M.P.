@@ -17,7 +17,7 @@ export default async function Page() {
         title="Dalillar"
         description="Fayl mavjudligi mazmun to'g'riligini isbotlamaydi. Ro'yxat shu rol topshiriqlari bilan cheklangan."
         columns={evidenceColumns}
-        rows={evidenceFor(user)}
+        rows={await evidenceFor(user)}
         filters={evidenceFilters}
         filename="diemp-dalillar.csv"
       />

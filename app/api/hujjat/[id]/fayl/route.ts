@@ -13,7 +13,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!canUpload(user.rol)) return NextResponse.json({ xato: "Hujjat bu rolga yopiq" }, { status: 403 })
   const { id } = await context.params
   if (!idPattern.test(id)) return NextResponse.json({ xato: "Topilmadi" }, { status: 404 })
-  const row = documentById(id)
+  const row = await documentById(id)
   if (!row) return NextResponse.json({ xato: "Topilmadi" }, { status: 404 })
 
   const root = path.resolve(dataDir())

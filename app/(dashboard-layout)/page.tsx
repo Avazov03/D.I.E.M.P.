@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default async function Page() {
   const user = await currentUser()
   if (!user) redirect("/auth/auth2/login")
-  const rows = tasksFor(user)
+  const rows = await tasksFor(user)
 
   if (user.rol === "ijrochi") return <ExecutorCabinet rows={rows} />
   if (user.rol === "koordinator") {

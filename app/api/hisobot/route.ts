@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ xato: "Ma'lumot o'qilmadi" }, { status: 400 })
   }
 
-  const own = tasksFor(user).some((row) => row.raqam === topshiriq)
+  const own = (await tasksFor(user)).some((row) => row.raqam === topshiriq)
   if (!own) return NextResponse.json({ xato: "Bu topshiriq sizga biriktirilmagan" }, { status: 403 })
   if (matn.length < 5) return NextResponse.json({ xato: "Hisobot matni juda qisqa" }, { status: 400 })
 

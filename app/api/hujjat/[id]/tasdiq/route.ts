@@ -13,7 +13,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!user) return NextResponse.json({ xato: "Kirish kerak" }, { status: 401 })
   if (!canUpload(user.rol)) return NextResponse.json({ xato: "Tasdiqlash bu rolga yopiq" }, { status: 403 })
   const { id } = await context.params
-  if (!idPattern.test(id) || !documentById(id)) return NextResponse.json({ xato: "Topilmadi" }, { status: 404 })
+  if (!idPattern.test(id) || !(await documentById(id))) return NextResponse.json({ xato: "Topilmadi" }, { status: 404 })
 
   let body: { raqam?: unknown; nomi?: unknown; sana?: unknown; topshiriqlar?: unknown }
   try {
@@ -44,7 +44,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const draft: Draft = { raqam, nomi: nomi.slice(0, 240), sana: sana.slice(0, 40), topshiriqlar, aniqlanmagan: [] }
-  const result = confirmDocument(id, draft)
+  const result = await confirmDocument(id, draft)
   if (!result.ok) return NextResponse.json({ xato: result.xato }, { status: 409 })
   return NextResponse.json({ ok: true, raqam })
 }
