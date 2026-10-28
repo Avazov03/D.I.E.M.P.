@@ -1,14 +1,17 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
+import { dataDir } from "@/lib/diemp/db"
 import type { DataRow } from "@/lib/diemp/sample"
 
 type Box = { rows: DataRow[]; sequence: number }
 
-const file = path.join(process.cwd(), "data", "inbox.json")
+function inboxFile() {
+  return path.join(dataDir(), "inbox.json")
+}
 
 function read(): Box {
   try {
-    const parsed = JSON.parse(readFileSync(file, "utf8")) as Box
+    const parsed = JSON.parse(readFileSync(inboxFile(), "utf8")) as Box
     if (!Array.isArray(parsed.rows) || typeof parsed.sequence !== "number") throw new Error("box")
     return parsed
   } catch {
@@ -17,6 +20,7 @@ function read(): Box {
 }
 
 function write(box: Box) {
+  const file = inboxFile()
   mkdirSync(path.dirname(file), { recursive: true })
   writeFileSync(file, JSON.stringify(box))
 }
