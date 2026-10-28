@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Box } from "lucide-react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
 import { executionSeries } from "@/lib/diemp/sample"
@@ -55,7 +55,7 @@ export function ExecutionChart() {
             <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
             <XAxis dataKey="oy" tickLine={false} axisLine={false} tickMargin={10} interval={0} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={4} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} width={32} />
-            <ChartTooltip />
+            <ChartTooltip content={<ChartTooltipContent />} />
             <Line dataKey="yopilgan" type="linear" stroke="var(--color-yopilgan)" strokeWidth={1.5} dot={{ r: 3, fill: "var(--color-yopilgan)", strokeWidth: 0 }} />
             <Line dataKey="otgan" type="linear" stroke="var(--color-otgan)" strokeWidth={1.5} strokeDasharray="4 4" dot={{ r: 3, fill: "var(--color-otgan)", strokeWidth: 0 }} />
           </LineChart>
