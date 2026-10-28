@@ -1,0 +1,24 @@
+---
+description: O'zgarishdan keyin commit, GitHub va server deployini so'rash
+alwaysApply: true
+---
+
+# GitHub va server
+
+Loyihada o'zgarish tugagach, foydalanuvchidan so'ra: commit, GitHubga push va serverga deploy qilinsinmi. Javobsiz buni qilma.
+
+- Remote: https://github.com/Avazov03/D.I.E.M.P..git
+- Branch: main
+- Domen: diemp.zonlc.fit
+- Server: 3.65.92.39
+- SSH kalit: `C:\Users\DUKE\.ssh\diemp_deploy` (faqat shu kompyuterda). Repoga, chatga va logga yozilmaydi.
+
+`.env`, `*.pem`, kalit va token commit qilinmaydi. `main` ga force push qilinmaydi.
+
+Foydalanuvchi faqat bittasini so'rasa, qolganini qilma. Uchala qadam muvaffaqiyatli bo'lsa, javobda shu tartibda belgi qo'y:
+
+- [x] commit
+- [x] GitHub
+- [x] server
+
+Qaysidir yiqilsa, o'sha qatorni belgisiz qoldir va sababini yoz.

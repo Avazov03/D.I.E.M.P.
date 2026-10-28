@@ -49,9 +49,9 @@ const Notifications = ({ className }: { className?: string }) => {
           className="w-screen sm:w-[360px] py-6 px-0"
         >
           <div className="flex items-center px-6 justify-between">
-            <h3 className="text-lg font-semibold">Notifications</h3>
+            <h3 className="text-lg font-semibold">Bildirishnomalar</h3>
             {unreadCount > 0 && (
-              <Badge className="px-3 bg-primary dark:bg-primary hover:bg-primary">{unreadCount} new</Badge>
+              <Badge className="px-3 bg-primary dark:bg-primary hover:bg-primary">{unreadCount} ta yangi</Badge>
             )}
           </div>
 
@@ -96,8 +96,8 @@ const Notifications = ({ className }: { className?: string }) => {
 
           {/* Footer Button */}
           <div className="pt-5 px-6">
-            <Button className="w-full" render={<Link href="#" />}>
-              See All Notifications
+            <Button className="w-full" render={<Link href="/audit" />}>
+              Audit jurnalini ochish
             </Button>
           </div>
         </DropdownMenuContent>

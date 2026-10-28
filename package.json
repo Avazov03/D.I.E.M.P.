@@ -1,6 +1,6 @@
 {
-  "name": "main",
-  "description": "ShadcnDashboard Modern Next.js Admin Dashboard",
+  "name": "diemp",
+  "description": "D.I.E.M.P. — davlat qarorlari ijrosini nazorat qilish platformasi",
   "version": "0.1.0",
   "private": true,
   "scripts": {

@@ -57,7 +57,7 @@ function Search() {
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <Input
-          placeholder="Search...."
+          placeholder="Qidirish..."
           className="rounded-lg pl-10!"
           required
           value={query}
@@ -93,7 +93,7 @@ function Search() {
           ) : (
             <div className="flex items-center justify-center h-full">
               <h1 className="text-medium font-medium ">
-                No Components Found!
+                Hech narsa topilmadi
               </h1>
             </div>
           )}

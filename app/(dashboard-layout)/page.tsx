@@ -1,57 +1,44 @@
-import AdvertisementCost from "@/app/components/dashboards/modern/advertisement-cost";
-import OverviewTab from "@/app/components/dashboards/modern/overview-tab";
-import TotalAssets from "@/app/components/dashboards/modern/total-assets";
-import TotalOrders from "@/app/components/dashboards/modern/total-orders";
-import TotalProfit from "@/app/components/dashboards/modern/total-profit";
-import TotalSales from "@/app/components/dashboards/modern/total-sales";
-import UpdateBanner from "@/app/components/dashboards/modern/update-banner";
-import ProjectsOrders from "@/app/components/dashboards/modern/projects-orders";
-import StyleAwareWrapper from "@/app/components/shared/StyleAwareWrapper";
-import StyleDivider from "@/app/components/shared/StyleDivider";
-import { Metadata } from "next";
+import type { Metadata } from "next"
+import StyleAwareWrapper from "@/app/components/shared/StyleAwareWrapper"
+import StyleDivider from "@/app/components/shared/StyleDivider"
+import { ControlGrid } from "@/app/components/diemp/control-grid"
+import { DashboardHeading } from "@/app/components/diemp/dashboard-heading"
+import { EventsTable } from "@/app/components/diemp/events-table"
+import { ExecutionChart } from "@/app/components/diemp/execution-chart"
+import { IndicatorGrid } from "@/app/components/diemp/indicator-grid"
+import { OrgTable } from "@/app/components/diemp/org-table"
 
 export const metadata: Metadata = {
-  title: "Modern Admin Dashboard",
-  description: "Modern template page",
-};
+  title: "Dashboard",
+  description: "Rahbariyat nazorat ekrani",
+}
 
-const page = () => {
+export default function Page() {
   return (
     <>
       <div className="pb-4">
-        <OverviewTab />
+        <DashboardHeading />
       </div>
-      <StyleAwareWrapper
-        lyraClassName="grid grid-cols-12 p-px gap-px bg-border"
-        defaultClassName="grid grid-cols-12 gap-4"
-      >
+      <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
         <div className="col-span-12">
-          <UpdateBanner />
+          <ControlGrid />
         </div>
         <StyleDivider wrapperClassName="col-span-12" />
         <div className="lg:col-span-7 col-span-12">
-          <TotalSales />
+          <ExecutionChart />
         </div>
         <div className="lg:col-span-5 col-span-12">
-          <TotalAssets />
-        </div>
-        <StyleDivider wrapperClassName="col-span-12" />
-        <div className="lg:col-span-4 col-span-12">
-          <TotalOrders />
-        </div>
-        <div className="lg:col-span-4 col-span-12">
-          <TotalProfit />
-        </div>
-        <div className="lg:col-span-4 col-span-12">
-          <AdvertisementCost />
+          <IndicatorGrid />
         </div>
         <StyleDivider wrapperClassName="col-span-12" />
         <div className="col-span-12">
-          <ProjectsOrders />
+          <EventsTable />
+        </div>
+        <StyleDivider wrapperClassName="col-span-12" />
+        <div className="col-span-12">
+          <OrgTable />
         </div>
       </StyleAwareWrapper>
     </>
-  );
-};
-
-export default page;
+  )
+}

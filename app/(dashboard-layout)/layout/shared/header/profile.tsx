@@ -24,7 +24,7 @@ export default function ProfileSheet() {
         <Avatar className="h-8 w-8">
           <AvatarImage src={"/images/profile/avtar.webp"} alt="profile" />
           <AvatarFallback className="bg-primary text-primary-foreground">
-            "U"
+            R
           </AvatarFallback>
         </Avatar>
       </SheetTrigger>
@@ -49,20 +49,20 @@ export default function ProfileSheet() {
                 height={30}
               />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                "U"
+                R
               </AvatarFallback>
             </Avatar>
 
             <div className="text-center">
               <h6 className="text-lg font-semibold">
-                Cameron
+                Rahbariyat
               </h6>
               <div className="flex items-center gap-2 justify-center">
                 <Mailbox
                   size={18} className="text-muted-foreground"
                 />
                 <span className="text-sm font-normal text-muted-foreground">
-                  info@shadcndashboard.com
+                  Namuna seans
                 </span>
               </div>
             </div>
@@ -110,28 +110,17 @@ export default function ProfileSheet() {
         {/* Footer */}
         <SheetFooter className="px-0 pb-6">
           <div className="border-t border-dashed border-border w-full">
-            <div className="rounded-sm pt-6 flex flex-col justify-center items-center gap-3">
-              <div>
-                <img
-                  src="/images/backgrounds/sidebarbuynow.svg"
-                  alt="login-bg"
-                />
-              </div>
-
+            <div className="rounded-sm pt-6 flex flex-col justify-center items-center gap-3 px-6">
               <div className="text-center">
                 <h5 className="text-xl font-semibold">
-                  Grab ShadcnDashboard Admin
+                  Namuna seans
                 </h5>
                 <p className="text-sm text-muted-foreground">
-                  Customize your dashboard
+                  Haqiqiy kirish keyingi bosqichda ulanadi
                 </p>
               </div>
-
-              <Button
-                variant="secondary"
-                className="text-primary"
-              >
-                <Link href={"/auth/auth2/login"}> Log Out</Link>
+              <Button variant="secondary" className="text-primary" render={<Link href="/auth/auth2/login" />}>
+                Chiqish
               </Button>
             </div>
           </div>

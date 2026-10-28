@@ -9,30 +9,17 @@ import { OfflineBanner } from "@/app/components/shared/offline-banner";
 
 
 const geist = Geist({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-geist",
 });
 
 export const metadata: Metadata = {
-  title: "ShadcnDashboard - Tailwind + Shadcn Nextjs",
-  description: "Modern admin dashboard built with Next.js, Tailwind, and Shadcn.",
-   openGraph: {
-    title: "ShadcnDashboard - Tailwind + Shadcn Nextjs",
-    description: "Modern admin dashboard built with Next.js, Tailwind, and Shadcn.",
-    images: [
-      {
-        url: "/OG-Image.png",
-        width: 1200,
-        height: 630,
-        alt: "ShadcnDashboard Preview",
-      },
-    ],
+  title: {
+    default: "D.I.E.M.P.",
+    template: "%s — D.I.E.M.P.",
   },
-  twitter: {
-    card: "summary_large_image",
-    images: ["/OG-Image.png"],
-  },
+  description: "Davlat qarorlari ijrosini nazorat qilish va intellektual tahlil platformasi.",
 };
 
 export default function RootLayout({
@@ -42,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
 
-    <html lang="en" suppressHydrationWarning
+    <html lang="uz" suppressHydrationWarning
       data-color-theme="CUSTOM_THEME"
       data-layout="vertical"
       data-boxed-layout="boxed"

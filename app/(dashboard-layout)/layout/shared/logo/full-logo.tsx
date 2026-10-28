@@ -1,29 +1,17 @@
-'use client'
+"use client"
 
-import Image from 'next/image'
-import Link from 'next/link'
+import Link from "next/link"
+
 const FullLogo = () => {
   return (
-
-    <Link href={'/'} className="max-w-[40px] block lg:max-w-[120px] overflow-hidden">
-      {/* Dark Logo   */}
-      <Image
-        src={'/images/logos/darklogo.svg'}
-        alt='logo'
-        width={100}
-        height={32}
-        className='block dark:hidden max-w-[120px] rtl:scale-x-[-1]'
-      />
-      {/* Light Logo  */}
-      <Image
-        src={'/images/logos/whitelogo.svg'}
-        alt='logo'
-        width={100}
-        height={32}
-        className='hidden dark:block max-w-[120px] rtl:scale-x-[-1]'
-      />
+    <Link href="/" className="flex items-center gap-2 overflow-hidden">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-foreground text-[11px] font-semibold tracking-tight text-background">
+        DI
+      </span>
+      <span className="hidden lg:block text-sm font-semibold tracking-[0.16em] text-foreground group-data-[state=collapsed]:hidden">
+        D.I.E.M.P.
+      </span>
     </Link>
-
   )
 }
 

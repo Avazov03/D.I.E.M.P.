@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import SocialButtons from "../../authforms/social-buttons";
 import Link from "next/link";
 import type { Metadata } from "next";
 import FullLogo from "@/app/(dashboard-layout)/layout/shared/logo/full-logo";
@@ -9,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {Button} from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Boxed Login Authentication",
-  description: "Log in to your account.",
+  title: "Kirish",
+  description: "D.I.E.M.P. namuna seansi.",
 };
 
 const BoxedLogin = () => {
@@ -23,7 +22,6 @@ const BoxedLogin = () => {
             <FullLogo />
           </div>
 
-          <SocialButtons />
           <form className="space-y-6 w-full">
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -31,12 +29,12 @@ const BoxedLogin = () => {
                   htmlFor="email"
                   className="text-sm font-normal text-muted-foreground"
                 >
-                  Email*
+                  Pochta*
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter Your Email"
+                  placeholder="Pochta manzili"
                   required
                 />
               </div>
@@ -45,12 +43,12 @@ const BoxedLogin = () => {
                   htmlFor="password"
                   className="text-sm font-normal text-muted-foreground"
                 >
-                  Password*
+                  Parol*
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Parol"
                   required
                 />
               </div>
@@ -64,33 +62,28 @@ const BoxedLogin = () => {
                     htmlFor="remember"
                     className="text-muted-foreground font-normal cursor-pointer leading-0"
                   >
-                    Remember this device
+                    Qurilmani eslab qolish
                   </Label>
                 </div>
                 <a
                   href="/auth/auth2/forgot-password"
                   className=" text-sm font-medium hover:underline underline-offset-4 transition-all"
                 >
-                  Forgot Password?
+                  Parolni unutdingizmi?
                 </a>
               </div>
             </div>
             <Button
               size="lg"
               className="w-full rounded-lg"
+              render={<Link href="/" />}
             >
-              Sign in
+              Namuna seansga kirish
             </Button>
           </form>
           {/* Footer */}
           <div className="flex gap-2 text-base font-medium mt-4 items-center justify-center">
-            <p className="text-muted-foreground">New to ShadcnDashboard ?</p>
-            <Link
-              href={"/auth/auth2/register"}
-              className="text-primary/80 hover:text-primary text-sm font-medium"
-            >
-              Create an account
-            </Link>
+            <p className="text-muted-foreground">Haqiqiy autentifikatsiya keyingi bosqichda ulanadi.</p>
           </div>
         </Card>
       </div>
