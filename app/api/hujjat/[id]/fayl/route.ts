@@ -5,7 +5,7 @@ import { canUpload } from "@/lib/diemp/access"
 import { dataDir, documentById } from "@/lib/diemp/db"
 import { currentUser } from "@/lib/diemp/session"
 
-const idPattern = /^[0-9a-f-]{36}$/i
+const idPattern = /^[A-Za-z0-9-]{3,80}$/
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await currentUser()

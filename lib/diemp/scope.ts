@@ -1,6 +1,6 @@
 import { decisions, evidence, kpis, reports, risks, visibleTasks, type DataRow } from "@/lib/diemp/sample"
 import { extraReports } from "@/lib/diemp/inbox"
-import { storedDecisions, storedTasks } from "@/lib/diemp/db"
+import { storedDecisions, storedEvidence, storedTasks } from "@/lib/diemp/db"
 import type { Role, User } from "@/lib/diemp/access"
 
 async function uploadedTasks(): Promise<DataRow[]> {
@@ -10,8 +10,8 @@ async function uploadedTasks(): Promise<DataRow[]> {
     matn: row.matn,
     tashkilot: row.tashkilot,
     muddat: row.muddat || "—",
-    holat: "ijroda",
-    muddatKod: "yaqin",
+    holat: row.holat || "ijroda",
+    muddatKod: row.holat === "muddati_otgan" ? "otgan" : row.holat === "yakunlangan" ? "rioya" : "yaqin",
     xatar: "yoq",
     jismoniy: "—",
     jismoniyTasdiq: "yoq",
@@ -22,13 +22,14 @@ async function uploadedTasks(): Promise<DataRow[]> {
 }
 
 async function uploadedDecisions(): Promise<DataRow[]> {
+  const tasks = await storedTasks()
   return (await storedDecisions()).map((row) => ({
     raqam: row.raqam,
-    turi: "qaror",
+    turi: row.turi || "qaror",
     nomi: row.nomi,
     sana: row.sana || "—",
     maxfiylik: "ichki",
-    holat: "ijroda",
+    holat: tasks.find((task) => task.qaror === row.raqam)?.holat || "ijroda",
     topshiriq: String(row.topshiriq),
   }))
 }
@@ -51,6 +52,13 @@ export async function reportsFor(user: User) {
   const rows = [...reports, ...extraReports()]
   if (wide(user.rol)) return rows
   if (user.rol === "koordinator" && user.tashkilot) return rows.filter((row) => row.tashkilot === user.tashkilot)
+  const ids = new Set((await tasksFor(user)).map((row) => row.raqam))
+  return rows.filter((row) => ids.has(row.topshiriq))
+}
+
+export async function evidenceFilesFor(user: User) {
+  const rows = await storedEvidence()
+  if (wide(user.rol)) return rows
   const ids = new Set((await tasksFor(user)).map((row) => row.raqam))
   return rows.filter((row) => ids.has(row.topshiriq))
 }

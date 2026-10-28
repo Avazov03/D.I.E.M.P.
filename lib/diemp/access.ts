@@ -36,7 +36,7 @@ const grants: Record<Role, string[]> = {
   nazorat: ["/", "/hujjatlar", "/topshiriqlar", "/hisobotlar", "/dalillar", "/xatarlar", "/audit"],
   koordinator: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar"],
   ijrochi: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar"],
-  tahlilchi: ["/", "/kpi", "/xatarlar", "/tahlil"],
+  tahlilchi: ["/", "/dalillar", "/kpi", "/xatarlar", "/tahlil"],
 }
 
 export function findUser(pochta: string, parol: string) {
@@ -58,6 +58,14 @@ export function canOpen(rol: Role, pathname: string) {
 }
 
 export function canUpload(rol: Role) {
+  return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat"
+}
+
+export function canCheckEvidence(rol: Role) {
+  return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat" || rol === "tahlilchi"
+}
+
+export function canJudgeEvidence(rol: Role) {
   return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat"
 }
 
