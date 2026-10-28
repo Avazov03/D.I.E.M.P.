@@ -22,16 +22,21 @@ const dir = process.env.DIEMP_DATA_DIR || path.join(process.cwd(), "data")
 mkdirSync(dir, { recursive: true })
 const file = path.join(dir, "diemp.sqlite")
 
-let opening: Promise<SqlDatabase> | null = null
+let wasm: Promise<Awaited<ReturnType<typeof initSqlJs>>> | null = null
+
+function engine() {
+  if (!wasm) {
+    wasm = initSqlJs({
+      locateFile: () => path.join(process.cwd(), "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
+    })
+  }
+  return wasm
+}
 
 async function open() {
-  if (!opening) {
-    opening = (async () => {
-      const SQL = await initSqlJs({
-        locateFile: () => path.join(process.cwd(), "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
-      })
-      const database = existsSync(file) ? new SQL.Database(readFileSync(file)) : new SQL.Database()
-      database.run(`
+  const SQL = await engine()
+  const database = existsSync(file) ? new SQL.Database(readFileSync(file)) : new SQL.Database()
+  database.run(`
         CREATE TABLE IF NOT EXISTS hujjat (
           id TEXT PRIMARY KEY,
           nom TEXT NOT NULL,
@@ -63,10 +68,7 @@ async function open() {
           muddat TEXT NOT NULL
         );
       `)
-      return database
-    })()
-  }
-  return opening
+  return database
 }
 
 function text(value: unknown) {
@@ -92,6 +94,7 @@ function many(database: SqlDatabase, sql: string, params: (string | number)[] = 
 
 function persist(database: SqlDatabase) {
   writeFileSync(file, Buffer.from(database.export()))
+  database.close()
 }
 
 function draftFrom(json: string | undefined): Draft | null {
@@ -122,7 +125,9 @@ export async function saveDocument(row: Omit<StoredDocument, "ajratma">, draft: 
 
 export async function listDocuments() {
   const database = await open()
-  return many(database, "SELECT id, nom, tur, holat, yuklovchi, yaratilgan, cheklov FROM hujjat ORDER BY yaratilgan DESC").map((row) => ({
+  const rows = many(database, "SELECT id, nom, tur, holat, yuklovchi, yaratilgan, cheklov FROM hujjat ORDER BY yaratilgan DESC")
+  database.close()
+  return rows.map((row) => ({
     id: text(row.id),
     nom: text(row.nom),
     tur: text(row.tur) as "pdf" | "docx",
@@ -136,8 +141,12 @@ export async function listDocuments() {
 export async function documentById(id: string): Promise<StoredDocument | null> {
   const database = await open()
   const row = one(database, "SELECT * FROM hujjat WHERE id = ?", [id])
-  if (!row) return null
+  if (!row) {
+    database.close()
+    return null
+  }
   const draft = one(database, "SELECT json FROM ajratma WHERE hujjat = ?", [id])
+  database.close()
   const tur = text(row.tur) === "pdf" ? "pdf" : "docx"
   return {
     id: text(row.id),
@@ -178,7 +187,9 @@ export async function confirmDocument(id: string, draft: Draft) {
 
 export async function storedDecisions() {
   const database = await open()
-  return many(database, "SELECT raqam, nomi, sana, topshiriq, hujjat FROM qaror ORDER BY raqam").map((row) => ({
+  const rows = many(database, "SELECT raqam, nomi, sana, topshiriq, hujjat FROM qaror ORDER BY raqam")
+  database.close()
+  return rows.map((row) => ({
     raqam: text(row.raqam),
     nomi: text(row.nomi),
     sana: text(row.sana),
@@ -189,7 +200,9 @@ export async function storedDecisions() {
 
 export async function storedTasks() {
   const database = await open()
-  return many(database, "SELECT raqam, qaror, matn, tashkilot, muddat, hujjat FROM topshiriq ORDER BY raqam").map((row) => ({
+  const rows = many(database, "SELECT raqam, qaror, matn, tashkilot, muddat, hujjat FROM topshiriq ORDER BY raqam")
+  database.close()
+  return rows.map((row) => ({
     raqam: text(row.raqam),
     qaror: text(row.qaror),
     matn: text(row.matn),
