@@ -302,7 +302,7 @@ export const riskFilters: FilterDef[] = [
 ]
 
 export function displayValue(key: string, value: string) {
-  if (key === "tashkilot") {
+  if (key === "tashkilot" || key === "organ") {
     return organizations.find((org) => org.kod === value)?.nom ?? value
   }
   if (key === "jismoniy" || key === "moliyaviy") {

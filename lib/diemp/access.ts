@@ -15,28 +15,28 @@ export const sessionCookie = "diemp_user"
 export const roleLabel: Record<Role, string> = {
   super_admin: "Super administrator",
   rahbariyat: "Rahbariyat",
-  nazorat: "Nazorat mas'uli",
-  koordinator: "Tashkilot koordinatori",
-  ijrochi: "Ijrochi",
+  nazorat: "Ekspert (tasdiqlovchi)",
+  koordinator: "Organ koordinatori",
+  ijrochi: "Baholovchi mutaxassis",
   tahlilchi: "Tahlilchi",
 }
 
 export const users: User[] = [
   { id: "admin", pochta: "admin@diemp.uz", parol: "namuna", rol: "super_admin", ism: "Super administrator", tashkilot: null, topshiriqlar: [] },
   { id: "rahbar", pochta: "rahbar@diemp.uz", parol: "namuna", rol: "rahbariyat", ism: "Rahbariyat", tashkilot: null, topshiriqlar: [] },
-  { id: "nazorat", pochta: "nazorat@diemp.uz", parol: "namuna", rol: "nazorat", ism: "Nazorat mas'uli", tashkilot: null, topshiriqlar: [] },
-  { id: "iqtisod", pochta: "iqtisod@diemp.uz", parol: "namuna", rol: "koordinator", ism: "Tashkilot koordinatori", tashkilot: "iqtisod", topshiriqlar: [] },
-  { id: "ijro", pochta: "ijro@diemp.uz", parol: "namuna", rol: "ijrochi", ism: "Ijrochi", tashkilot: "qurilish", topshiriqlar: ["NM-01-03", "NM-01-04"] },
+  { id: "nazorat", pochta: "nazorat@diemp.uz", parol: "namuna", rol: "nazorat", ism: "Ekspert", tashkilot: null, topshiriqlar: [] },
+  { id: "iqtisod", pochta: "iqtisod@diemp.uz", parol: "namuna", rol: "koordinator", ism: "Organ koordinatori", tashkilot: "iqtisod", topshiriqlar: [] },
+  { id: "ijro", pochta: "ijro@diemp.uz", parol: "namuna", rol: "ijrochi", ism: "Baholovchi mutaxassis", tashkilot: "qurilish", topshiriqlar: ["BH-02", "BH-03"] },
   { id: "tahlil", pochta: "tahlil@diemp.uz", parol: "namuna", rol: "tahlilchi", ism: "Tahlilchi", tashkilot: null, topshiriqlar: [] },
 ]
 
 const grants: Record<Role, string[]> = {
   super_admin: ["*"],
-  rahbariyat: ["/", "/hujjatlar", "/qarorlar", "/topshiriqlar", "/hisobotlar", "/dalillar", "/kpi", "/xatarlar", "/tahlil", "/audit"],
-  nazorat: ["/", "/hujjatlar", "/topshiriqlar", "/hisobotlar", "/dalillar", "/xatarlar", "/audit"],
-  koordinator: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar"],
-  ijrochi: ["/", "/topshiriqlar", "/hisobotlar", "/dalillar"],
-  tahlilchi: ["/", "/dalillar", "/kpi", "/xatarlar", "/tahlil"],
+  rahbariyat: ["/", "/hujjatlar", "/reyestr", "/baholash", "/hisobotlar", "/monitoring", "/tahlil", "/audit", "/qarorlar", "/topshiriqlar", "/kpi", "/xatarlar", "/dalillar"],
+  nazorat: ["/", "/hujjatlar", "/reyestr", "/baholash", "/hisobotlar", "/monitoring", "/audit", "/qarorlar", "/topshiriqlar"],
+  koordinator: ["/", "/reyestr", "/baholash", "/hisobotlar", "/hujjatlar", "/qarorlar", "/topshiriqlar"],
+  ijrochi: ["/", "/baholash", "/hisobotlar", "/topshiriqlar"],
+  tahlilchi: ["/", "/baholash", "/monitoring", "/tahlil", "/reyestr", "/kpi", "/xatarlar"],
 }
 
 export function findUser(pochta: string, parol: string) {
@@ -58,17 +58,25 @@ export function canOpen(rol: Role, pathname: string) {
 }
 
 export function canUpload(rol: Role) {
-  return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat"
+  return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat" || rol === "koordinator"
 }
 
-export function canCheckEvidence(rol: Role) {
-  return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat" || rol === "tahlilchi"
+export function canEditAssessment(rol: Role) {
+  return rol === "super_admin" || rol === "rahbariyat" || rol === "koordinator" || rol === "ijrochi"
 }
 
-export function canJudgeEvidence(rol: Role) {
+export function canConfirmAssessment(rol: Role) {
   return rol === "super_admin" || rol === "rahbariyat" || rol === "nazorat"
 }
 
 export function canAskAi(rol: Role) {
   return rol === "super_admin" || rol === "rahbariyat" || rol === "tahlilchi"
+}
+
+export function canCheckEvidence(rol: Role) {
+  return canAskAi(rol) || rol === "nazorat"
+}
+
+export function canJudgeEvidence(rol: Role) {
+  return canConfirmAssessment(rol)
 }

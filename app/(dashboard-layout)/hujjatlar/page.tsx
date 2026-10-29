@@ -5,9 +5,10 @@ import { DocumentUpload } from "@/app/components/diemp/document-upload"
 import { StatusPill } from "@/app/components/diemp/status-pill"
 import { canUpload } from "@/lib/diemp/access"
 import { listDocuments } from "@/lib/diemp/db"
+import { methodologyNote } from "@/lib/diemp/ttb"
 import { currentUser } from "@/lib/diemp/session"
 
-export const metadata: Metadata = { title: "Hujjatlar" }
+export const metadata: Metadata = { title: "Hujjat yuklash" }
 
 export default async function Page() {
   const user = await currentUser()
@@ -17,8 +18,10 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-xl">Hujjatlar</h2>
-        <p className="text-sm text-muted-foreground">Yuklangan PDF va Word shu yerda saqlanadi. Tasdiqlangach topshiriq ro'yxatiga yoziladi. Namuna qatorlar alohida qoladi.</p>
+        <h2 className="text-xl">Hujjatni tizimga kiritish</h2>
+        <p className="text-sm text-muted-foreground">
+          Loyiha yoki qabul qilingan hujjat PDF/Word sifatida yuklanadi. AI maydon ajratishi mumkin, tasdiq odamniki. {methodologyNote}
+        </p>
       </div>
       <DocumentUpload />
       <div className="flex flex-col border border-border">
@@ -33,6 +36,7 @@ export default async function Page() {
           </Link>
         ))}
       </div>
+      <Link href="/reyestr" className="text-sm underline underline-offset-4">Reyestrga o&apos;tish</Link>
     </div>
   )
 }

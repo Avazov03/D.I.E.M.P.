@@ -6,25 +6,24 @@ import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import { averageApproved, deadlineRate, evidence, visibleTasks } from "@/lib/diemp/sample"
+import { averageBurden, averageNet, averageOutcome, countStatus, visibleAssessments } from "@/lib/diemp/ttb"
 
-const rows = visibleTasks()
-const physical = averageApproved(rows, "jismoniy", "jismoniyTasdiq")
-const financial = averageApproved(rows, "moliyaviy", "moliyaviyTasdiq")
-const deadline = deadlineRate(rows)
-const approvedEvidence = evidence.filter((row) => row.holat === "tasdiqlangan" && row.maxfiylik !== "maxfiy").length
-const visibleEvidence = evidence.filter((row) => row.maxfiylik !== "maxfiy").length
-const evidenceRate = visibleEvidence ? Math.round((approvedEvidence / visibleEvidence) * 100) : null
+const net = averageNet()
+const burden = averageBurden()
+const outcome = averageOutcome()
+const confirmed = countStatus("tasdiqlangan") + countStatus("monitoring")
+const total = visibleAssessments().length
+const confirmRate = total ? Math.round((confirmed / total) * 100) : null
 
-const cells: { href: string; title: string; value: number | null; hint: string; icon: LucideIcon }[] = [
-  { href: "/kpi", title: "Jismoniy bajarilish", value: physical, hint: "Tasdiqlangan hajmlar o'rtachasi", icon: Gauge },
-  { href: "/kpi", title: "Moliyaviy bajarilish", value: financial, hint: "Jismoniy ko'rsatkichdan alohida", icon: Landmark },
-  { href: "/topshiriqlar?muddatKod=otgan", title: "Muddatga rioya", value: deadline, hint: "Muddatida yopilgan / yopilgan yoki o'tgan", icon: Timer },
-  { href: "/dalillar?holat=tasdiqlangan", title: "Dalil tasdig'i", value: evidenceRate, hint: `${approvedEvidence} / ${visibleEvidence} tasdiqlangan`, icon: ShieldCheck },
+const cells: { href: string; title: string; value: number | null; suffix: string; hint: string; icon: LucideIcon }[] = [
+  { href: "/baholash", title: "O'rtacha sof ta'sir", value: net, suffix: "", hint: "Tasdiqlangan foyda − xarajat", icon: Gauge },
+  { href: "/baholash", title: "Ma'muriy yuk", value: burden, suffix: "", hint: "Tasdiqlangan yuk ballari o'rtachasi", icon: Landmark },
+  { href: "/monitoring", title: "Reja bajarilishi", value: outcome, suffix: "%", hint: "Haqiqiy / reja, faqat tasdiqlangan", icon: Timer },
+  { href: "/hisobotlar?holat=tasdiqlangan", title: "Tasdiq ulushi", value: confirmRate, suffix: "%", hint: `${confirmed} / ${total} baholash`, icon: ShieldCheck },
 ]
 
-function RateRing({ value, label }: { value: number | null; label: string }) {
-  const amount = value ?? 0
+function RateRing({ value, label, max = 100 }: { value: number | null; label: string; max?: number }) {
+  const amount = value === null ? 0 : Math.min(100, Math.round((value / max) * 100))
   const config = { qiymat: { label, color: "var(--color-primary)" } } satisfies ChartConfig
   return (
     <ChartContainer config={config} className="aspect-auto! size-20! shrink-0">
@@ -55,12 +54,12 @@ export function IndicatorGrid() {
                   <cell.icon width={16} height={16} />
                 </div>
                 <div>
-                  <h6 className="text-2xl font-semibold">{cell.value === null ? "—" : `${cell.value}%`}</h6>
+                  <h6 className="text-2xl font-semibold">{cell.value === null ? "—" : `${cell.value}${cell.suffix}`}</h6>
                   <p className="text-sm font-normal">{cell.title}</p>
                   <p className="text-xs text-muted-foreground">{cell.hint}</p>
                 </div>
               </div>
-              <RateRing value={cell.value} label={cell.title} />
+              <RateRing value={cell.value} label={cell.title} max={cell.title.includes("sof") ? 400 : 100} />
             </Link>
           ))}
         </div>

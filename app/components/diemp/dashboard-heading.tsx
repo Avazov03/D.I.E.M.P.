@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { CalendarDays, Download, Moon, RefreshCcw, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { downloadCsv } from "@/lib/diemp/csv"
-import { exportableRows, taskColumns, tasks } from "@/lib/diemp/sample"
+import { assessmentColumns, assessmentRows, methodologyNote } from "@/lib/diemp/ttb"
 
 export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
   const [greeting, setGreeting] = useState("Xayrli kun")
@@ -31,7 +31,7 @@ export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
             </span>
           </h2>
           <p className="text-sm font-normal text-muted-foreground">
-            Namuna ma&apos;lumot. Rasmiy ko&apos;rsatkich faqat tasdiqlangan yozuv va kod formulasi bilan chiqadi.
+            Tartibga solish ta&apos;sirini baholash. Rasmiy ko&apos;rsatkich faqat tasdiqlangan qiymat va kod formulasi bilan chiqadi.
           </p>
         </div>
         <div className="flex items-center lg:flex-nowrap flex-wrap gap-2">
@@ -41,10 +41,8 @@ export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
           <Button
             className="flex items-center gap-1.5 h-auto px-4 py-2 rounded-lg cursor-pointer"
             onClick={() => {
-              const rows = exportableRows(tasks, taskColumns)
-              downloadCsv("diemp-topshiriqlar.csv", rows, taskColumns.map((column) => ({ ...column, label: column.label })))
-              const hidden = tasks.length - rows.length
-              setNote(hidden > 0 ? `Eksport tayyor. ${hidden} ta maxfiy yozuv kiritilmadi.` : "Eksport tayyor.")
+              downloadCsv("ttb-baholash.csv", assessmentRows(), assessmentColumns)
+              setNote("Eksport tayyor. Maxfiy yozuvlar kiritilmaydi.")
             }}
           >
             <Download size={16} />
@@ -54,7 +52,7 @@ export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
       </div>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <CalendarDays size={14} />
-        <span>Manba: namuna to&apos;plami · Hisoblash: tasdiqlangan qiymat · Tasdiq: namuna holati</span>
+        <span>{methodologyNote}</span>
         {note ? <span className="text-foreground">{note}</span> : null}
       </div>
     </div>

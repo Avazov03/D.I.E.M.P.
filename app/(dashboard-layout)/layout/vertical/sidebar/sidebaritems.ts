@@ -1,6 +1,5 @@
 import {
   ClipboardCheck,
-  Files,
   FileText,
   FileUp,
   Gauge,
@@ -8,7 +7,6 @@ import {
   ListChecks,
   ScrollText,
   Sparkles,
-  TriangleAlert,
   type LucideIcon,
 } from "lucide-react"
 
@@ -50,22 +48,20 @@ export interface MenuItem {
 
 const SidebarContent: MenuItem[] = [
   {
-    heading: "Nazorat",
+    heading: "TTB jarayoni",
     items: [
       { id: "dashboard", name: "Dashboard", icon: House, url: "/" },
-      { id: "hujjatlar", name: "Hujjatlar", icon: FileUp, url: "/hujjatlar" },
-      { id: "qarorlar", name: "Qarorlar", icon: FileText, url: "/qarorlar" },
-      { id: "topshiriqlar", name: "Topshiriqlar", icon: ListChecks, url: "/topshiriqlar" },
+      { id: "hujjatlar", name: "Hujjat yuklash", icon: FileUp, url: "/hujjatlar" },
+      { id: "reyestr", name: "Reyestr", icon: FileText, url: "/reyestr" },
+      { id: "baholash", name: "Baholash", icon: ListChecks, url: "/baholash" },
       { id: "hisobotlar", name: "Hisobotlar", icon: ClipboardCheck, url: "/hisobotlar" },
-      { id: "dalillar", name: "Dalillar", icon: Files, url: "/dalillar" },
+      { id: "monitoring", name: "Monitoring", icon: Gauge, url: "/monitoring" },
     ],
   },
   {
     heading: "Tahlil",
     items: [
-      { id: "kpi", name: "KPI", icon: Gauge, url: "/kpi" },
-      { id: "xatarlar", name: "Xatarlar", icon: TriangleAlert, url: "/xatarlar" },
-      { id: "tahlil", name: "AI tahlil", icon: Sparkles, url: "/tahlil" },
+      { id: "tahlil", name: "AI yordamchi", icon: Sparkles, url: "/tahlil" },
     ],
   },
   {

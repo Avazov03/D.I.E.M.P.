@@ -7,25 +7,26 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
+import { averageBurden, averageNet, averageOutcome, methodologyNote } from "@/lib/diemp/ttb"
 
 const questions = [
-  { savol: "Qaysi topshiriqlar muddati bo'yicha xavf ostida?", href: "/xatarlar?daraja=yuqori" },
-  { savol: "Qaysi hisobotlar hali tasdiqlanmagan?", href: "/hisobotlar?holat=kutilmoqda" },
-  { savol: "Qaysi dalillar yetishmayapti?", href: "/dalillar?holat=yetishmaydi" },
-  { savol: "Qaysi KPI rasmiy natija bermaydi?", href: "/kpi?holat=hisoblanmaydi" },
-  { savol: "Jismoniy va moliyaviy ijro qayerda ajralib turadi?", href: "/kpi" },
+  { savol: "Qaysi baholashlar hali tasdiqlanmagan?", href: "/baholash?holat=tekshiruvda" },
+  { savol: "Qaysi hujjatlarda ma'muriy yuk yuqori?", href: "/baholash" },
+  { savol: "Monitoringda reja va haqiqiy qayerda ajraladi?", href: "/monitoring" },
+  { savol: "Qaysi hisobotlar tasdiq kutmoqda?", href: "/hisobotlar?holat=kutilmoqda" },
+  { savol: "Qaytarilgan baholashlarda qanday kamchilik bor?", href: "/baholash?holat=qaytarilgan" },
 ]
 
 type Answer = {
   javob: string
   manbalar: { id: string; href: string }[]
   aniqlanmagan: string[]
-  rasmiy: { jismoniy: number | null; moliyaviy: number | null; muddat: number | null }
+  rasmiy: { sof: number | null; yuk: number | null; natija: number | null }
   cheklov: string
 }
 
-function percent(value: number | null) {
-  return value === null ? "Hisoblanmaydi" : `${value}%`
+function show(value: number | null, suffix = "") {
+  return value === null ? "Hisoblanmaydi" : `${value}${suffix}`
 }
 
 export function AnalystPanel() {
@@ -47,12 +48,29 @@ export function AnalystPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ savol: question }),
       })
-      const data = (await response.json()) as Answer & { xato?: string }
+      const data = (await response.json()) as {
+        javob?: string
+        manbalar?: { id: string; href: string }[]
+        aniqlanmagan?: string[]
+        rasmiy?: { jismoniy?: number | null; moliyaviy?: number | null; muddat?: number | null }
+        cheklov?: string
+        xato?: string
+      }
       if (!response.ok) {
         setXato(data.xato || "AI xizmati javob bermadi")
         return
       }
-      setAnswer(data)
+      setAnswer({
+        javob: data.javob || "Javob olinmadi",
+        manbalar: data.manbalar || [],
+        aniqlanmagan: data.aniqlanmagan || [],
+        rasmiy: {
+          sof: averageNet(),
+          yuk: averageBurden(),
+          natija: averageOutcome(),
+        },
+        cheklov: data.cheklov || "AI xulosasi rasmiy fakt emas va ekspert tasdig'isiz qaror hisoblanmaydi.",
+      })
     } catch {
       setXato("AI xizmati javob bermadi. Rasmiy ko'rsatkichlar o'z holicha ishlaydi.")
     } finally {
@@ -63,16 +81,16 @@ export function AnalystPanel() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-xl">AI tahlil</h2>
+        <h2 className="text-xl">AI yordamchi</h2>
         <p className="text-sm text-muted-foreground">
-          Savol shu seansdagi ochiq namuna yozuvlar bo&apos;yicha javoblanadi. Hujjatdan yangi maydon ajratish keyingi bosqich.
+          Hujjat matni va baholash bo&apos;yicha dastlabki ko&apos;rsatma. Huquqiy bahoni almashtirmaydi. {methodologyNote}
         </p>
       </div>
       <DashboardCard>
         <CardHeader className="border-b border-border">
           <CardTitle className="flex items-center gap-2">
             <Sparkles size={16} />
-            Rahbar savoli
+            Mutaxassis savoli
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 p-6">
@@ -102,16 +120,16 @@ export function AnalystPanel() {
               <p className="text-xs text-muted-foreground">{answer.cheklov}</p>
               <div className="grid gap-px bg-border sm:grid-cols-3">
                 <div className="bg-background p-3">
-                  <p className="text-lg">{percent(answer.rasmiy.jismoniy)}</p>
-                  <p className="text-xs text-muted-foreground">Jismoniy, kod hisobi</p>
+                  <p className="text-lg">{show(answer.rasmiy.sof)}</p>
+                  <p className="text-xs text-muted-foreground">Sof ta&apos;sir, kod hisobi</p>
                 </div>
                 <div className="bg-background p-3">
-                  <p className="text-lg">{percent(answer.rasmiy.moliyaviy)}</p>
-                  <p className="text-xs text-muted-foreground">Moliyaviy, kod hisobi</p>
+                  <p className="text-lg">{show(answer.rasmiy.yuk)}</p>
+                  <p className="text-xs text-muted-foreground">Ma&apos;muriy yuk, kod hisobi</p>
                 </div>
                 <div className="bg-background p-3">
-                  <p className="text-lg">{percent(answer.rasmiy.muddat)}</p>
-                  <p className="text-xs text-muted-foreground">Muddatga rioya, kod hisobi</p>
+                  <p className="text-lg">{show(answer.rasmiy.natija, "%")}</p>
+                  <p className="text-xs text-muted-foreground">Reja bajarilishi, kod hisobi</p>
                 </div>
               </div>
               {answer.manbalar.length ? (

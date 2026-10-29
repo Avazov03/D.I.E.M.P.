@@ -3,14 +3,12 @@ import { canOpen, roleLabel, users, type Role } from "../lib/diemp/access"
 
 export const sahifalar = [
   { path: "/", nom: "Dashboard", sarlavha: "" },
-  { path: "/hujjatlar", nom: "Hujjatlar", sarlavha: "Hujjatlar" },
-  { path: "/qarorlar", nom: "Qarorlar", sarlavha: "Qarorlar" },
-  { path: "/topshiriqlar", nom: "Topshiriqlar", sarlavha: "Topshiriqlar" },
-  { path: "/hisobotlar", nom: "Hisobotlar", sarlavha: "Hisobotlar" },
-  { path: "/dalillar", nom: "Dalillar", sarlavha: "Faylli dalillar" },
-  { path: "/kpi", nom: "KPI", sarlavha: "KPI" },
-  { path: "/xatarlar", nom: "Xatarlar", sarlavha: "Xatarlar" },
-  { path: "/tahlil", nom: "AI tahlil", sarlavha: "AI tahlil" },
+  { path: "/hujjatlar", nom: "Hujjat yuklash", sarlavha: "Hujjatni tizimga kiritish" },
+  { path: "/reyestr", nom: "Reyestr", sarlavha: "Normativ-huquqiy hujjatlar reyestri" },
+  { path: "/baholash", nom: "Baholash", sarlavha: "Tartibga solish ta'sirini baholash" },
+  { path: "/hisobotlar", nom: "Hisobotlar", sarlavha: "Elektron hisobotlar" },
+  { path: "/monitoring", nom: "Monitoring", sarlavha: "Monitoring va natijadorlik" },
+  { path: "/tahlil", nom: "AI yordamchi", sarlavha: "AI yordamchi" },
   { path: "/audit", nom: "Audit jurnali", sarlavha: "Audit jurnali" },
   { path: "/foydalanuvchilar", nom: "Foydalanuvchilar", sarlavha: "Foydalanuvchilar" },
 ] as const

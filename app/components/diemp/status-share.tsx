@@ -1,65 +1,77 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { PieChart } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import type { StatusKey } from "@/lib/diemp/charts"
 
-const meta: Record<StatusKey, { label: string; href: string; swatch: string }> = {
-  yakunlangan: { label: "Tasdiqlangan yakun", href: "/topshiriqlar?holat=yakunlangan", swatch: "bg-chart-1" },
-  ijroda: { label: "Ijroda", href: "/topshiriqlar?holat=ijroda", swatch: "bg-chart-2" },
-  muddati_otgan: { label: "Muddati o'tgan", href: "/topshiriqlar?holat=muddati_otgan", swatch: "bg-chart-3" },
-}
+const meta = {
+  tasdiqlangan: { label: "Tasdiqlangan", href: "/baholash?holat=tasdiqlangan", color: "var(--color-chart-1)" },
+  tekshiruvda: { label: "Tekshiruvda", href: "/baholash?holat=tekshiruvda", color: "var(--color-chart-2)" },
+  qoralama: { label: "Qoralama / qaytarilgan", href: "/baholash?holat=qoralama", color: "var(--color-chart-3)" },
+} as const
 
-const chartConfig = {
-  yakunlangan: { label: "Tasdiqlangan yakun", color: "var(--color-chart-1)" },
-  ijroda: { label: "Ijroda", color: "var(--color-chart-2)" },
-  muddati_otgan: { label: "Muddati o'tgan", color: "var(--color-chart-3)" },
-} satisfies ChartConfig
+type Key = keyof typeof meta
 
-export function StatusShare({ total, parts }: { total: number; parts: { key: StatusKey; count: number; percent: number | null }[] }) {
-  const router = useRouter()
-  const row = { name: "Holat", yakunlangan: 0, ijroda: 0, muddati_otgan: 0 }
-  for (const part of parts) row[part.key] = part.count
+export function StatusShare({
+  total,
+  parts,
+}: {
+  total: number
+  parts: { key: string; count: number; percent: number | null }[]
+}) {
+  const config = {
+    tasdiqlangan: { label: meta.tasdiqlangan.label, color: "var(--color-chart-1)" },
+    tekshiruvda: { label: meta.tekshiruvda.label, color: "var(--color-chart-2)" },
+    qoralama: { label: meta.qoralama.label, color: "var(--color-chart-3)" },
+  } satisfies ChartConfig
+
+  const row = Object.fromEntries(parts.map((part) => [part.key, part.count])) as Record<string, number>
+  const data = [{ nom: "holat", ...row }]
 
   return (
-    <DashboardCard className="flex flex-col justify-between gap-3 overflow-visible!">
-      <CardHeader>
-        <CardTitle className="text-lg font-medium">Holat taqsimoti</CardTitle>
+    <DashboardCard className="flex flex-col gap-0!">
+      <CardHeader className="border-b border-border">
+        <CardTitle className="flex items-center gap-2">
+          <PieChart size={16} className="text-muted-foreground" />
+          Holat taqsimoti
+        </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col justify-between gap-4 overflow-visible!">
-        <div className="flex flex-col gap-1.5">
-          <Link href="/topshiriqlar" className="text-2xl font-semibold">{total}</Link>
-          <p className="text-xs font-normal text-muted-foreground">Shu roldagi topshiriqlar. Uch holat alohida hisoblanadi.</p>
+      <CardContent className="p-5 flex flex-col gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Shu roldagi baholashlar. Uch holat alohida hisoblanadi.</p>
+          <Link href="/baholash" className="text-2xl font-semibold">{total}</Link>
         </div>
-        {total === 0 ? <p className="text-sm text-muted-foreground">Hisoblanmaydi</p> : (
-          <ChartContainer config={chartConfig} className="h-8! [&_.recharts-wrapper]:overflow-visible!">
-            <BarChart data={[row]} layout="vertical" stackOffset="expand">
+        {total === 0 ? (
+          <p className="text-sm text-muted-foreground">Hisoblanmaydi</p>
+        ) : (
+          <ChartContainer config={config} className="aspect-auto! h-8 w-full">
+            <BarChart data={data} layout="vertical" margin={{ top: 0, right: 0, bottom: 0, left: 0 }} stackOffset="expand">
               <XAxis type="number" hide />
-              <YAxis type="category" dataKey="name" hide />
-              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="yakunlangan" stackId="a" fill="var(--color-yakunlangan)" radius={[5, 5, 5, 5]} strokeWidth={2} stroke="var(--color-background)" className="cursor-pointer" onClick={() => router.push(meta.yakunlangan.href)} />
-              <Bar dataKey="ijroda" stackId="a" fill="var(--color-ijroda)" stroke="var(--color-background)" radius={[5, 5, 5, 5]} className="cursor-pointer" onClick={() => router.push(meta.ijroda.href)} />
-              <Bar dataKey="muddati_otgan" stackId="a" fill="var(--color-muddati_otgan)" stroke="var(--color-background)" radius={[5, 5, 5, 5]} className="cursor-pointer" onClick={() => router.push(meta.muddati_otgan.href)} />
+              <YAxis type="category" dataKey="nom" hide />
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              {(Object.keys(meta) as Key[]).map((key) => (
+                <Bar key={key} dataKey={key} stackId="a" fill={meta[key].color} stroke="var(--color-background)" strokeWidth={2} className="cursor-pointer" onClick={() => { window.location.href = meta[key].href }} />
+              ))}
             </BarChart>
           </ChartContainer>
         )}
-        <div className="flex flex-col">
-          {parts.map((part) => (
-            <Link key={part.key} href={meta[part.key].href} className="py-4 border-b border-border last:border-b-0 flex items-center justify-between last:pb-0 hover:bg-muted/30">
-              <span className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${meta[part.key].swatch}`} />
-                <span className="text-sm font-normal">{meta[part.key].label}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="text-sm font-medium">{part.count}</span>
-                <span className="text-xs font-normal text-muted-foreground">{part.percent === null ? "(—)" : `(${part.percent}%)`}</span>
-              </span>
-            </Link>
-          ))}
+        <div>
+          {parts.map((part) => {
+            const item = meta[part.key as Key]
+            if (!item) return null
+            return (
+              <Link key={part.key} href={item.href} className="py-4 border-b border-border last:border-b-0 flex items-center justify-between last:pb-0 hover:bg-muted/30">
+                <span className="flex items-center gap-2 text-sm">
+                  <span className="size-2.5 rounded-sm" style={{ background: item.color }} />
+                  {item.label}
+                </span>
+                <span className="text-sm font-medium">{part.count}{part.percent === null ? "" : ` (${part.percent}%)`}</span>
+              </Link>
+            )
+          })}
         </div>
       </CardContent>
     </DashboardCard>

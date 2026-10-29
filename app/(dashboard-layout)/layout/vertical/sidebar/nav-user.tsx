@@ -14,7 +14,7 @@ export function NavUser() {
       .then((data: { rol?: Role } | null) => setRol(data?.rol ?? null))
   }, [])
   const navItems = [
-    { title: "AI tahlil", url: "/tahlil", icon: Sparkles },
+    { title: "AI yordamchi", url: "/tahlil", icon: Sparkles },
     { title: "Audit jurnali", url: "/audit", icon: ScrollText },
   ].filter((item) => rol && canOpen(rol, item.url))
 

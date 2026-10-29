@@ -2,8 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 import { Registry } from "@/app/components/diemp/registry"
-import { reportsFor } from "@/lib/diemp/scope"
-import { reportColumns, reportFilters } from "@/lib/diemp/sample"
+import { methodologyNote, reportColumns, reportFilters, reportRows } from "@/lib/diemp/ttb"
 import { currentUser } from "@/lib/diemp/session"
 
 export const metadata: Metadata = { title: "Hisobotlar" }
@@ -14,12 +13,12 @@ export default async function Page() {
   return (
     <Suspense>
       <Registry
-        title="Hisobotlar"
-        description="Faqat tasdiqlangan hisobot rasmiy ko'rsatkichga kiradi. Ro'yxat shu rol doirasida."
+        title="Elektron hisobotlar"
+        description={`Word va PDF shakllari tasdiqlangan uslubiyotdan olinadi. Hozircha namuna holat. ${methodologyNote}`}
         columns={reportColumns}
-        rows={await reportsFor(user)}
+        rows={reportRows()}
         filters={reportFilters}
-        filename="diemp-hisobotlar.csv"
+        filename="ttb-hisobotlar.csv"
       />
     </Suspense>
   )

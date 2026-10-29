@@ -27,31 +27,23 @@ for (const user of users) {
   })
 }
 
-test("ijrochi faqat o'z topshiriqlarini ko'radi", async ({ page }) => {
+test("baholovchi faqat o'z varaqalarini ko'radi", async ({ page }) => {
   await kirish(page, "ijrochi")
-  await expect(page.getByRole("cell", { name: "NM-01-03", exact: true })).toBeVisible()
-  await expect(page.getByRole("cell", { name: "NM-01-04", exact: true })).toBeVisible()
-  await expect(page.getByText("QR-11")).toHaveCount(0)
-  await expect(page.getByRole("button", { name: "Hisobotni yuborish" })).toBeDisabled()
-  await page.getByPlaceholder("Bajarilgan ish va dalil haqida qisqa hisobot").fill("qisqa")
-  await expect(page.getByRole("button", { name: "Hisobotni yuborish" })).toBeEnabled()
+  await expect(page.getByRole("cell", { name: "BH-02", exact: true })).toBeVisible()
+  await expect(page.getByRole("cell", { name: "BH-03", exact: true })).toBeVisible()
+  await expect(page.getByText("BH-01")).toHaveCount(0)
 })
 
-test("koordinator faqat o'z tashkilotini ko'radi", async ({ page }) => {
+test("koordinator faqat o'z organini ko'radi", async ({ page }) => {
   await kirish(page, "koordinator")
-  await expect(page.getByText("QR-11-01")).toBeVisible()
-  await expect(page.getByText("FR-22-01")).toHaveCount(0)
-  await page.goto("/dalillar")
-  await expect(page.getByRole("link", { name: /Qurilish maydoni/ })).toBeVisible()
-  await expect(page.getByRole("link", { name: /Ofis stullari/ })).toHaveCount(0)
+  await expect(page.getByText("BH-01")).toBeVisible()
+  await expect(page.getByText("BH-02")).toHaveCount(0)
 })
 
-test("tahlilchi topshiriq sahifasiga kirmaydi, dalilni ko'radi", async ({ page }) => {
+test("tahlilchi AI ochadi, hujjat yuklashga kirmaydi", async ({ page }) => {
   await kirish(page, "tahlilchi")
-  await page.goto("/topshiriqlar")
+  await page.goto("/hujjatlar")
   await expect(page).toHaveURL(/\/$/)
-  await page.goto("/dalillar/dalil-stullar")
-  await expect(page.getByRole("button", { name: "AI rasmni tekshirsin" })).toBeVisible()
-  await expect(page.getByRole("button", { name: "Dalil mos", exact: true })).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "Asl hujjat" })).toHaveCount(0)
+  await page.goto("/tahlil")
+  await expect(page.getByRole("heading", { name: "AI yordamchi", exact: true })).toBeVisible()
 })

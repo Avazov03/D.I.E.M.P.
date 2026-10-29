@@ -5,7 +5,7 @@ import { LoginForm } from "./form";
 
 export const metadata: Metadata = {
   title: "Kirish",
-  description: "D.I.E.M.P. namuna seansi.",
+  description: "Tartibga solish ta'sirini baholash platformasi.",
 };
 
 const BoxedLogin = () => {

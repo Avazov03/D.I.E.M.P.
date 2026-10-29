@@ -12,8 +12,8 @@ import { DashboardCard } from "@/app/components/shared/dashboard-card"
 import { closedChange, sliceSeries, type MonthPoint, type Period } from "@/lib/diemp/charts"
 
 const chartConfig = {
-  yopilgan: { label: "Tasdiqlangan yakun", color: "var(--color-primary)" },
-  otgan: { label: "Muddati o'tgan", color: "color-mix(in srgb, var(--primary) 60%, transparent)" },
+  yopilgan: { label: "Tasdiqlangan baholash", color: "var(--color-primary)" },
+  otgan: { label: "Qoralama / qaytarilgan", color: "var(--color-muted-foreground)" },
 } satisfies ChartConfig
 
 const periods = [
@@ -37,15 +37,15 @@ export function ExecutionChart({ series }: { series: MonthPoint[] }) {
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp size={16} className="text-muted-foreground" />
-          Ijro dinamikasi
+          Baholash dinamikasi
         </CardTitle>
       </CardHeader>
       <CardContent className="p-5 flex flex-col gap-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex flex-col gap-1">
-            <span className="text-base font-normal text-foreground leading-6">Tasdiqlangan yakun</span>
+            <span className="text-base font-normal text-foreground leading-6">Tasdiqlangan baholash</span>
             <div className="flex items-center gap-2 flex-wrap">
-              <Link href="/topshiriqlar?holat=yakunlangan" className="text-2xl font-semibold tracking-[-0.3px] text-foreground leading-8">
+              <Link href="/baholash?holat=tasdiqlangan" className="text-2xl font-semibold tracking-[-0.3px] text-foreground leading-8">
                 {closed}
               </Link>
               {change === null ? <span className="text-sm text-muted-foreground">Oldingi oyga nisbatan hisoblanmaydi</span> : <span className="text-sm font-medium text-chart-2">{change > 0 ? `+${change}%` : `${change}%`} oldingi oyga nisbatan</span>}
@@ -62,15 +62,15 @@ export function ExecutionChart({ series }: { series: MonthPoint[] }) {
             </SelectContent>
           </Select>
         </div>
-        <ChartContainer config={chartConfig} className="h-[215px]! w-full">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[215px] w-full">
           <LineChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -10 }}>
             <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
             <XAxis dataKey="oy" tickLine={false} axisLine={false} tickMargin={10} interval={0} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={4} domain={[0, peak]} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} width={32} />
             <ChartTooltip cursor={{ stroke: "var(--border)", strokeWidth: 1, strokeDasharray: "4 4" }} content={<ChartTooltipContent />} />
             {mark && mark.otgan > 0 ? <ReferenceLine x={mark.oy} stroke="var(--border)" strokeWidth={1} strokeDasharray="4 4" /> : null}
-            <Line dataKey="yopilgan" type="linear" stroke="var(--color-yopilgan)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--color-yopilgan)", strokeWidth: 0 }} className="cursor-pointer" onClick={() => router.push("/topshiriqlar?holat=yakunlangan")} />
-            <Line dataKey="otgan" type="linear" stroke="var(--color-otgan)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} activeDot={{ r: 4, fill: "var(--color-otgan)", strokeWidth: 0 }} className="cursor-pointer" onClick={() => router.push("/topshiriqlar?holat=muddati_otgan")} />
+            <Line dataKey="yopilgan" type="linear" stroke="var(--color-yopilgan)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--color-yopilgan)", strokeWidth: 0 }} className="cursor-pointer" onClick={() => router.push("/baholash?holat=tasdiqlangan")} />
+            <Line dataKey="otgan" type="linear" stroke="var(--color-otgan)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} activeDot={{ r: 4, fill: "var(--color-otgan)", strokeWidth: 0 }} className="cursor-pointer" onClick={() => router.push("/baholash?holat=qoralama")} />
           </LineChart>
         </ChartContainer>
       </CardContent>

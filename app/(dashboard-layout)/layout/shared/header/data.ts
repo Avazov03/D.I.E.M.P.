@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileWarning, ScrollText, ShieldAlert, type LucideIcon } from "lucide-react"
+import { ClipboardCheck, FileWarning, Gauge, ScrollText, ShieldAlert, type LucideIcon } from "lucide-react"
 
 export interface NotificationType {
   title: string
@@ -15,8 +15,8 @@ const Notification: NotificationType[] = [
     icon: FileWarning,
     bgcolor: "bg-chart-4/10",
     color: "text-chart-4",
-    title: "Hisobot qaytarildi",
-    subtitle: "HS-102 dalili topshiriqqa mos emas",
+    title: "Baholash qaytarildi",
+    subtitle: "BH-05 foyda hisobi tasdiqlanmadi",
     time: "09:40",
     isRead: false,
   },
@@ -24,8 +24,8 @@ const Notification: NotificationType[] = [
     icon: ShieldAlert,
     bgcolor: "bg-destructive/10",
     color: "text-destructive",
-    title: "Muddat buzildi",
-    subtitle: "NM-03-01 qoidaviy xatar: yuqori",
+    title: "Tekshiruv kutilmoqda",
+    subtitle: "BH-01 ekspert tasdig'iga navbatda",
     time: "09:10",
     isRead: false,
   },
@@ -33,17 +33,17 @@ const Notification: NotificationType[] = [
     icon: ClipboardCheck,
     bgcolor: "bg-chart-2/10",
     color: "text-chart-2",
-    title: "Dalil tasdiqlandi",
-    subtitle: "DL-07 xesh bo'yicha tekshirildi",
+    title: "Hisobot tasdiqlandi",
+    subtitle: "BH-04 keyingi TTB yakunlandi",
     time: "11:05",
     isRead: false,
   },
   {
-    icon: ScrollText,
+    icon: Gauge,
     bgcolor: "bg-primary/5",
     color: "text-primary",
-    title: "Eksport rad etildi",
-    subtitle: "NM-05 maxfiy toifada",
+    title: "Monitoring yangilandi",
+    subtitle: "BH-02 haqiqiy 42 / reja 50",
     time: "15:44",
     isRead: true,
   },
@@ -61,7 +61,7 @@ interface profileType {
 const profileDD: profileType[] = [
   { avatar: ScrollText, title: "Dashboard", href: "/", badge: false },
   { avatar: ClipboardCheck, title: "Hisobotlar", href: "/hisobotlar", badge: false },
-  { avatar: ShieldAlert, title: "Xatarlar", href: "/xatarlar", badge: false },
+  { avatar: ShieldAlert, title: "Monitoring", href: "/monitoring", badge: false },
 ]
 
 export { Notification, profileDD }

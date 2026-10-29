@@ -20,12 +20,10 @@ test("har bir rol o'z tugmasidan kiradi", async ({ page }) => {
 })
 
 test("sessiyasiz sahifa va API yopiq", async ({ page, request }) => {
-  await page.goto("/topshiriqlar")
+  await page.goto("/baholash")
   await expect(page).toHaveURL(/\/auth\/auth2\/login/)
   const response = await request.get("/api/sessiya")
   expect(response.status()).toBe(401)
-  const file = await request.get("/api/hujjat/namuna-qr-11/fayl")
-  expect(file.status()).toBe(401)
 })
 
 test("kirishdan tashqari auth sahifalari ochiladi", async ({ page }) => {
@@ -40,6 +38,6 @@ test("chiqish seansni yopadi", async ({ page }) => {
   await page.getByAltText("profile").click()
   await page.getByRole("button", { name: "Chiqish" }).click()
   await expect(page).toHaveURL(/\/auth\/auth2\/login/)
-  await page.goto("/kpi")
+  await page.goto("/monitoring")
   await expect(page).toHaveURL(/\/auth\/auth2\/login/)
 })

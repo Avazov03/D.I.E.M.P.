@@ -1,38 +1,34 @@
 import Link from "next/link"
-import { AlertTriangle, CheckCheck, ClipboardList, FileWarning, Files, Hourglass, ListChecks, ScrollText } from "lucide-react"
+import { CheckCheck, ClipboardList, FileText, FileWarning, Gauge, Hourglass, ListChecks, ScrollText } from "lucide-react"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import { countBy, evidence, reports, tasks } from "@/lib/diemp/sample"
-import { decisionsFor, tasksFor } from "@/lib/diemp/scope"
-import { currentUser } from "@/lib/diemp/session"
+import { countStatus, visibleAssessments, visibleDocuments } from "@/lib/diemp/ttb"
 
 export async function ControlGrid() {
-  const user = await currentUser()
-  if (!user) return null
-  const openTasks = await tasksFor(user)
-  const decisionRows = await decisionsFor(user)
+  const docs = visibleDocuments()
+  const rows = visibleAssessments()
   const cells = [
-    { href: "/qarorlar", title: "Jami qarorlar", value: decisionRows.length, hint: "Bitta yozuv maxfiy toifada", icon: ScrollText },
-    { href: "/topshiriqlar", title: "Jami topshiriqlar", value: openTasks.length, hint: "Maxfiy bandlar yashirilgan", icon: ListChecks },
-    { href: "/topshiriqlar?holat=yakunlangan", title: "Tasdiqlangan yakun", value: countBy(openTasks, "holat", "yakunlangan"), hint: "Yakuniy tasdiq bilan", icon: CheckCheck },
-    { href: "/topshiriqlar?holat=ijroda", title: "Ijrodagi", value: countBy(openTasks, "holat", "ijroda"), hint: "Hali yopilmagan", icon: ClipboardList },
-    { href: "/topshiriqlar?holat=muddati_otgan", title: "Muddati o'tgan", value: countBy(openTasks, "holat", "muddati_otgan"), hint: "Qoidaviy kechikish", icon: Hourglass },
-    { href: "/hisobotlar?holat=kutilmoqda", title: "Tasdiq kutilmoqda", value: countBy(reports, "holat", "kutilmoqda"), hint: "Rasmiy foizga kirmaydi", icon: FileWarning },
-    { href: "/dalillar?holat=yetishmaydi", title: "Dalil yetishmaydi", value: countBy(evidence, "holat", "yetishmaydi"), hint: "Fayl borligi isbot emas", icon: Files },
-    { href: "/xatarlar?daraja=yuqori", title: "Yuqori xatar", value: countBy(tasks.filter((row) => row.maxfiylik !== "maxfiy"), "xatar", "yuqori"), hint: "Qoida asosida ochilgan", icon: AlertTriangle },
+    { href: "/reyestr", title: "Reyestrdagi hujjatlar", value: docs.length, hint: "Loyiha va qabul qilingan", icon: ScrollText },
+    { href: "/baholash", title: "Baholashlar", value: rows.length, hint: "Dastlabki va keyingi TTB", icon: ListChecks },
+    { href: "/baholash?holat=tasdiqlangan", title: "Tasdiqlangan", value: countStatus("tasdiqlangan") + countStatus("monitoring"), hint: "Ekspert tasdig'i bilan", icon: CheckCheck },
+    { href: "/baholash?holat=tekshiruvda", title: "Tekshiruvda", value: countStatus("tekshiruvda"), hint: "Odam tasdig'i kutilmoqda", icon: ClipboardList },
+    { href: "/baholash?holat=qoralama", title: "Qoralama", value: countStatus("qoralama"), hint: "Hali to'liq emas", icon: Hourglass },
+    { href: "/hisobotlar?holat=kutilmoqda", title: "Hisobot kutilmoqda", value: countStatus("tekshiruvda") + countStatus("qoralama"), hint: "Shakl hali yakunlanmagan", icon: FileWarning },
+    { href: "/baholash?holat=qaytarilgan", title: "Qaytarilgan", value: countStatus("qaytarilgan"), hint: "Qayta ishlash kerak", icon: FileText },
+    { href: "/monitoring", title: "Monitoringda", value: countStatus("monitoring"), hint: "Reja va haqiqiy solishtiriladi", icon: Gauge },
   ]
   return (
     <DashboardCard className="flex flex-col gap-0! pb-0!">
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2">
           <ClipboardList size={16} className="text-muted-foreground" />
-          Nazorat kesimi
+          TTB kesimi
         </CardTitle>
       </CardHeader>
       <CardContent className="h-full! px-0!">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border">
           {cells.map((cell) => (
-            <Link key={cell.href} href={cell.href} className="flex flex-col justify-between gap-6 p-6 bg-background hover:bg-muted/30">
+            <Link key={cell.href + cell.title} href={cell.href} className="flex flex-col justify-between gap-6 p-6 bg-background hover:bg-muted/30">
               <div className="border border-border rounded-md p-2 w-fit">
                 <cell.icon width={16} height={16} />
               </div>

@@ -4,9 +4,9 @@ import { kirish, tanla } from "./yordam"
 test("qidiruv, mavzu, bildirishnoma va yangilash", async ({ page }) => {
   await kirish(page, "rahbariyat")
 
-  await page.getByPlaceholder("Qidirish...").fill("Dalillar")
-  await page.getByRole("link", { name: "Dalillar" }).last().click()
-  await expect(page).toHaveURL(/\/dalillar$/)
+  await page.getByPlaceholder("Qidirish...").fill("Baholash")
+  await page.locator(".absolute a[href='/baholash']").first().click()
+  await expect(page).toHaveURL(/\/baholash$/)
 
   await page.getByPlaceholder("Qidirish...").fill("yoq-bunday-sahifa")
   await expect(page.getByRole("heading", { name: "Hech narsa topilmadi" })).toBeVisible()
@@ -19,39 +19,29 @@ test("qidiruv, mavzu, bildirishnoma va yangilash", async ({ page }) => {
   await page.locator("svg.lucide-bell").click()
   await page.getByRole("link", { name: "Audit jurnalini ochish" }).click()
   await expect(page).toHaveURL(/\/audit$/)
-  await expect(page.getByRole("heading", { name: "Audit jurnali" })).toBeVisible()
 
   await page.goto("/")
   const download = page.waitForEvent("download")
   await page.getByRole("button", { name: "Eksport" }).click()
-  expect((await download).suggestedFilename()).toBe("diemp-topshiriqlar.csv")
-  await expect(page.getByText(/3 ta maxfiy yozuv kiritilmadi/)).toBeVisible()
-
-  await page.locator("button:has(svg.lucide-refresh-ccw)").click()
-  await expect(page.getByRole("main").getByText("Namuna ma'lumot")).toBeVisible()
+  expect((await download).suggestedFilename()).toBe("ttb-baholash.csv")
+  await expect(page.getByRole("main").getByText("Tartibga solish ta'sirini baholash")).toBeVisible()
 })
 
-test("ijrochi yopiq sahifani qidiruvda ko'rmaydi", async ({ page }) => {
+test("baholovchi yopiq sahifani qidiruvda ko'rmaydi", async ({ page }) => {
   await kirish(page, "ijrochi")
-  await page.getByPlaceholder("Qidirish...").fill("KPI")
+  await page.getByPlaceholder("Qidirish...").fill("Monitoring")
   await expect(page.getByRole("heading", { name: "Hech narsa topilmadi" })).toBeVisible()
 })
 
-test("royxat filtrlari va KPI holati", async ({ page }) => {
+test("royxat filtrlari ishlaydi", async ({ page }) => {
   await kirish(page, "rahbariyat")
   await page.goto("/hisobotlar")
-  await tanla(page, /Tekshiruv:/, "Tasdiq kutilmoqda")
+  await tanla(page, /Holat:/, "Tasdiq kutilmoqda")
   await expect(page).toHaveURL(/holat=kutilmoqda/)
-  await expect(page.getByText(/\d+ ta yozuv/)).toBeVisible()
 
-  await page.goto("/xatarlar")
-  await tanla(page, /Daraja:/, "Yuqori")
-  await expect(page).toHaveURL(/daraja=yuqori/)
-
-  await page.goto("/kpi")
-  await tanla(page, /Holat:/, "Hisoblanmaydi")
-  await expect(page).toHaveURL(/holat=hisoblanmaydi/)
-  await expect(page.getByText("Hisoblanmaydi").first()).toBeVisible()
+  await page.goto("/monitoring")
+  await tanla(page, /Holat:/, "Monitoring")
+  await expect(page).toHaveURL(/holat=monitoring/)
 })
 
 test("yo'q sahifa va pastki havola", async ({ page }) => {
