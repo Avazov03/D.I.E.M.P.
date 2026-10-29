@@ -39,7 +39,7 @@ export function DocumentUpload() {
       }}
     >
       <p className="text-sm text-muted-foreground">PDF yoki Word (.doc va .docx). AI ajratmasi tasdiqlanmaguncha baholash rasmiy emas. Skaner rasm hozircha o'qilmaydi.</p>
-      <Input name="fayl" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+      <Input name="fayl" type="file" accept=".pdf,.doc,.docx,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/rtf" required />
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-foreground">{note}</p>
         <Button type="submit" disabled={loading}>{loading ? "Yuklanmoqda" : "Hujjatni yuklash"}</Button>

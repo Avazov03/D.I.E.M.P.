@@ -3,7 +3,7 @@ import path from "node:path"
 import { NextResponse } from "next/server"
 import { canBringProof } from "@/lib/diemp/task-rows"
 import { dataDir, replaceProof, setEvidenceNote, storedTasks } from "@/lib/diemp/db"
-import { isSecretText, readDocument } from "@/lib/diemp/read-file"
+import { isSecretText, readOffice } from "@/lib/diemp/read-file"
 import { currentUser } from "@/lib/diemp/session"
 import { matchEvidence, matchText } from "@/lib/diemp/vision"
 
@@ -33,24 +33,19 @@ export async function POST(request: Request, context: { params: Promise<{ raqam:
   if (file.size < 1 || file.size > LIMIT) return NextResponse.json({ xato: "Fayl 8 MB dan katta yoki bo'sh" }, { status: 400 })
 
   const lower = file.name.toLowerCase()
-  const tur = lower.endsWith(".pdf") ? "pdf" : lower.endsWith(".docx") ? "docx" : lower.endsWith(".doc") ? "doc" : lower.endsWith(".png") ? "png" : lower.endsWith(".jpg") || lower.endsWith(".jpeg") ? "jpg" : null
-  if (!tur) return NextResponse.json({ xato: "Faqat PDF, Word yoki rasm qabul qilinadi" }, { status: 400 })
-
   const bytes = Buffer.from(await file.arrayBuffer())
-  const pdfOk = tur === "pdf" && bytes.subarray(0, 5).toString("latin1") === "%PDF-"
-  const docxOk = tur === "docx" && bytes[0] === 0x50 && bytes[1] === 0x4b
-  const docOk = tur === "doc" && bytes[0] === 0xd0 && bytes[1] === 0xcf
-  const imageOk = tur === "png" || tur === "jpg"
-  if (!pdfOk && !docxOk && !docOk && !imageOk) return NextResponse.json({ xato: "Fayl turi mos emas" }, { status: 400 })
-
+  const image = lower.endsWith(".png") ? "png" : lower.endsWith(".jpg") || lower.endsWith(".jpeg") ? "jpg" : null
+  let tur = image ?? "doc"
   let matn = ""
-  if (tur === "pdf" || tur === "docx" || tur === "doc") {
+  if (!image) {
     try {
-      matn = await readDocument(tur, bytes)
-    } catch {
-      return NextResponse.json({ xato: "Dalil matni o'qilmadi" }, { status: 400 })
+      const office = await readOffice(file.name, bytes)
+      tur = office.kind
+      matn = office.text
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Dalil matni o'qilmadi"
+      return NextResponse.json({ xato: message.includes("PDF") ? "Faqat PDF, Word yoki rasm qabul qilinadi" : message }, { status: 400 })
     }
-    if (matn.length < 20) return NextResponse.json({ xato: "Matn topilmadi. Matnli PDF yoki Word kerak." }, { status: 400 })
   }
 
   const id = crypto.randomUUID()

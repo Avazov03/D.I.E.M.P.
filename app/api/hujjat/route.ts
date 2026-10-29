@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { canUpload } from "@/lib/diemp/access"
 import { dataDir, listDocuments, saveDocument, type Draft } from "@/lib/diemp/db"
 import { extractDraft } from "@/lib/diemp/extract"
-import { isSecretText, readDocument } from "@/lib/diemp/read-file"
+import { isSecretText, readOffice } from "@/lib/diemp/read-file"
 import { currentUser } from "@/lib/diemp/session"
 
 const LIMIT = 8 * 1024 * 1024
@@ -31,24 +31,16 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) return NextResponse.json({ xato: "Fayl tanlanmagan" }, { status: 400 })
   if (file.size < 1 || file.size > LIMIT) return NextResponse.json({ xato: "Fayl 8 MB dan katta yoki bo'sh" }, { status: 400 })
 
-  const lower = file.name.toLowerCase()
-  const tur = lower.endsWith(".pdf") ? "pdf" : lower.endsWith(".docx") ? "docx" : lower.endsWith(".doc") ? "doc" : null
-  if (!tur) return NextResponse.json({ xato: "Faqat PDF yoki Word qabul qilinadi" }, { status: 400 })
-
   const bytes = Buffer.from(await file.arrayBuffer())
-  const pdfOk = tur === "pdf" && bytes.subarray(0, 5).toString("latin1") === "%PDF-"
-  const docxOk = tur === "docx" && bytes[0] === 0x50 && bytes[1] === 0x4b
-  const docOk = tur === "doc" && bytes[0] === 0xd0 && bytes[1] === 0xcf
-  if (!pdfOk && !docxOk && !docOk) return NextResponse.json({ xato: "Fayl turi mos emas" }, { status: 400 })
-
+  let tur: "pdf" | "docx" | "doc"
   let matn = ""
   try {
-    matn = await readDocument(tur, bytes)
-  } catch {
-    return NextResponse.json({ xato: "Hujjat matni o'qilmadi" }, { status: 400 })
-  }
-  if (matn.length < 20) {
-    return NextResponse.json({ xato: "Matn topilmadi. Skaner rasm bo'lsa, hozircha matnli PDF yoki Word kerak." }, { status: 400 })
+    const office = await readOffice(file.name, bytes)
+    tur = office.kind
+    matn = office.text
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Hujjat matni o'qilmadi"
+    return NextResponse.json({ xato: message }, { status: 400 })
   }
 
   const id = crypto.randomUUID()

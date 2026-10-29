@@ -3,7 +3,7 @@ import path from "node:path"
 import { NextResponse } from "next/server"
 import { canCheckEvidence, canJudgeEvidence } from "@/lib/diemp/access"
 import { dataDir, evidenceById, setEvidenceNote, setEvidenceStatus, storedTasks } from "@/lib/diemp/db"
-import { readDocument } from "@/lib/diemp/read-file"
+import { readOffice } from "@/lib/diemp/read-file"
 import { evidenceFilesFor } from "@/lib/diemp/scope"
 import { currentUser } from "@/lib/diemp/session"
 import { matchEvidence, matchText } from "@/lib/diemp/vision"
@@ -31,7 +31,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   try {
     const bytes = readFileSync(file)
     const result = document
-      ? await matchText(task?.matn || row.topshiriq, await readDocument(row.tur === "pdf" ? "pdf" : row.tur === "doc" ? "doc" : "docx", bytes))
+      ? await matchText(task?.matn || row.topshiriq, (await readOffice(row.nom || `dalil.${row.tur}`, bytes)).text)
       : await matchEvidence(task?.matn || row.topshiriq, row.izoh, row.tur === "png" ? "image/png" : "image/jpeg", bytes)
     const holat = result.moslik === "mos" ? "Mos" : result.moslik === "mos_emas" ? "Mos emas" : "Aniqlanmagan"
     await setEvidenceNote(id, `${holat}. ${result.nimaKorindi} ${result.sabab}`.replace(/\s+/g, " ").trim())
