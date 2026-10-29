@@ -144,6 +144,8 @@ export type DecisionView = {
     parchasi: string
     holat: ImpactInput["holat"]
     miqdor: number
+    oldin: string
+    hozir: string
   }[]
 }
 
@@ -160,6 +162,10 @@ export function decisionViews(
       .map((item) => {
         const stat = statisticById(item.statistika)
         const miqdor = amountOf(item)
+        const shift = signedAmount(item.belgi, miqdor) * (stat?.impactScale ?? 1)
+        const now = stat ? currentOf(stat, impacts) : 0
+        const before = item.holat === "tasdiqlangan" ? now - shift : now
+        const after = item.holat === "tasdiqlangan" ? now : now + shift
         return {
           id: item.id,
           nomi: stat?.nomi || item.statistika,
@@ -168,6 +174,8 @@ export function decisionViews(
           parchasi: item.parchasi,
           holat: item.holat,
           miqdor: signedAmount(item.belgi, miqdor),
+          oldin: stat ? formatSeriesValue(stat.id, before) : "",
+          hozir: stat ? formatSeriesValue(stat.id, after) : "",
         }
       }),
   }))

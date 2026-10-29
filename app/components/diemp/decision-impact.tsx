@@ -87,6 +87,7 @@ export function DecisionImpacts({
                             <p className="shrink-0 text-xs text-muted-foreground">{item.holat === "tasdiqlangan" ? "Joriy songa kirgan" : "Taklif"}</p>
                           </div>
                           <p className="text-lg font-semibold tracking-tight">{item.matn}</p>
+                          <p className="text-sm text-muted-foreground">Oldin {item.oldin}. Hozir {item.hozir}.</p>
                           <ChartContainer config={chartConfig} className="aspect-auto! h-8! w-full">
                             <BarChart layout="vertical" data={[{ nom: item.nomi, miqdor: item.miqdor }]} margin={{ top: 6, right: 0, bottom: 6, left: 0 }}>
                               <XAxis type="number" domain={impactDomain(item.miqdor)} allowDataOverflow hide />
