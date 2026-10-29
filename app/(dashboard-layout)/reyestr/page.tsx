@@ -14,7 +14,7 @@ export default async function Page() {
     <Suspense>
       <Registry
         title="Normativ-huquqiy hujjatlar reyestri"
-        description={`Loyiha va qabul qilingan hujjatlar. Versiyalar alohida ko'rinadi. ${methodologyNote}`}
+        description={`Loyiha va qabul qilingan hujjatlar. Raqamni bosing, eski va yangi matn yonma-yon chiqadi. ${methodologyNote}`}
         columns={documentColumns}
         rows={documentRows()}
         filters={documentFilters}

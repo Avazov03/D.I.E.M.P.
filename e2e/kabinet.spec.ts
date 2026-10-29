@@ -12,9 +12,11 @@ test("rahbar kesimi, diagramma va rasmiy foiz ishlaydi", async ({ page }) => {
   await tanla(page, /So'nggi 10 oy/, "Joriy oy")
   await expect(page.getByText("Oldingi oyga nisbatan hisoblanmaydi")).toBeVisible()
 
+  await page.goto("/baholash")
+  await expect(page.getByRole("cell", { name: "BH-01", exact: true })).toBeVisible()
+  await page.goto("/")
   await page.getByRole("link", { name: /Tekshiruvda/ }).first().click()
   await expect(page).toHaveURL(/\/baholash\?holat=tekshiruvda/)
-  await expect(page.getByRole("cell", { name: "BH-01", exact: true })).toBeVisible()
 })
 
 test("baholash varaqasi sof ta'sirni kodda hisoblaydi", async ({ page }) => {

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react"
 import { CalendarDays, Download, Moon, RefreshCcw, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { downloadCsv } from "@/lib/diemp/csv"
-import { assessmentColumns, assessmentRows, methodologyNote } from "@/lib/diemp/ttb"
+import { assessmentColumns, methodologyNote } from "@/lib/diemp/ttb"
+import type { DataRow } from "@/lib/diemp/sample"
 
-export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
+export function DashboardHeading({ name = "Rahbariyat", rows }: { name?: string; rows: DataRow[] }) {
   const [greeting, setGreeting] = useState("Xayrli kun")
   const [note, setNote] = useState("")
 
@@ -41,7 +42,7 @@ export function DashboardHeading({ name = "Rahbariyat" }: { name?: string }) {
           <Button
             className="flex items-center gap-1.5 h-auto px-4 py-2 rounded-lg cursor-pointer"
             onClick={() => {
-              downloadCsv("ttb-baholash.csv", assessmentRows(), assessmentColumns)
+              downloadCsv("ttb-baholash.csv", rows, assessmentColumns)
               setNote("Eksport tayyor. Maxfiy yozuvlar kiritilmaydi.")
             }}
           >

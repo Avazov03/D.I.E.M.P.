@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ArrowDownUp, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -121,7 +122,14 @@ export function Registry({
                       const raw = row[column.key] ?? ""
                       return (
                         <TableCell key={column.key} className="px-4 py-3 text-sm align-top max-w-[320px]">
-                          {statusTone[raw] ? <StatusPill field={column.key} code={raw} /> : displayValue(column.key, raw)}
+                          {column.kind === "files" ? (
+                            <span className="flex gap-3 whitespace-nowrap">
+                              <a className="underline underline-offset-4" href={`/api/baholash/${raw}/fayl?tur=docx`}>Word</a>
+                              <a className="underline underline-offset-4" href={`/api/baholash/${raw}/fayl?tur=pdf`}>PDF</a>
+                            </span>
+                          ) : column.key === "raqam" && row.versiya ? (
+                            <Link className="underline underline-offset-4" href={`/reyestr/${raw}`}>{displayValue(column.key, raw)}</Link>
+                          ) : statusTone[raw] ? <StatusPill field={column.key} code={raw} /> : displayValue(column.key, raw)}
                         </TableCell>
                       )
                     })}

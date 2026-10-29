@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { StatusPill } from "@/app/components/diemp/status-pill"
-import { netEffect, outcomeGap, organName, type Assessment } from "@/lib/diemp/ttb"
+import { assessmentGaps, netEffect, outcomeGap, organName, type Assessment } from "@/lib/diemp/ttb"
 import type { DocumentItem } from "@/lib/diemp/ttb"
 
 export function AssessmentForm({
@@ -20,8 +21,10 @@ export function AssessmentForm({
   canEdit: boolean
   canConfirm: boolean
 }) {
+  const router = useRouter()
   const [row, setRow] = useState(assessment)
   const [note, setNote] = useState("")
+  const [busy, setBusy] = useState(false)
 
   function setField<K extends keyof Assessment>(key: K, value: Assessment[K]) {
     setRow((current) => ({ ...current, [key]: value }))
@@ -30,15 +33,39 @@ export function AssessmentForm({
   const sof = netEffect(row)
   const natija = outcomeGap(row)
 
-  function save(next: Assessment["holat"]) {
-    setRow((current) => ({ ...current, holat: next }))
-    setNote(
-      next === "tasdiqlangan"
-        ? "Tasdiqlandi. AI xulosasi emas — ekspert qarori."
-        : next === "qaytarilgan"
-          ? "Qaytarildi. Baholovchi qayta to'ldiradi."
-          : "Qoralama saqlandi. Rasmiy hisobotga hali kirmaydi.",
-    )
+  async function save(next: Assessment["holat"]) {
+    const draft = { ...row, holat: next }
+    const gaps = assessmentGaps(draft, next)
+    if (gaps.length) {
+      setNote(`To'ldiring: ${gaps.join(", ")}`)
+      return
+    }
+    setBusy(true)
+    try {
+      const response = await fetch(`/api/baholash/${row.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      })
+      const data = (await response.json()) as { xato?: string; baholash?: Assessment }
+      if (!response.ok) {
+        setNote(data.xato || "Saqlanmadi")
+        return
+      }
+      setRow(data.baholash ?? draft)
+      setNote(
+        next === "tasdiqlangan"
+          ? "Tasdiqlandi. AI xulosasi emas — ekspert qarori."
+          : next === "qaytarilgan"
+            ? "Qaytarildi. Baholovchi qayta to'ldiradi."
+            : "Qoralama saqlandi. Rasmiy hisobotga hali kirmaydi.",
+      )
+      router.refresh()
+    } catch {
+      setNote("Saqlanmadi. Qayta bosing.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -134,7 +161,7 @@ export function AssessmentForm({
             <label className="flex items-center gap-2"><input type="checkbox" disabled={!canConfirm} checked={row.rejaTasdiq === "ha"} onChange={(event) => setField("rejaTasdiq", event.target.checked ? "ha" : "yoq")} />Reja tasdiq</label>
             <label className="flex items-center gap-2"><input type="checkbox" disabled={!canConfirm} checked={row.haqiqiyTasdiq === "ha"} onChange={(event) => setField("haqiqiyTasdiq", event.target.checked ? "ha" : "yoq")} />Haqiqiy tasdiq</label>
           </div>
-          <p className="text-sm text-muted-foreground">Hisobot Word/PDF uchun shakl uslubiyotdan olinadi. Hozircha namuna ko&apos;rinish.</p>
+          <p className="text-sm text-muted-foreground">Word va PDF namuna hisobot. Tasdiqlangan idoraviy blanka kelgach shu shakl almashtiriladi.</p>
         </section>
       </div>
 
@@ -143,9 +170,11 @@ export function AssessmentForm({
         <div className="flex flex-wrap gap-2">
           <Link className="text-sm underline underline-offset-4 self-center" href="/baholash">Ro&apos;yxat</Link>
           <Link className="text-sm underline underline-offset-4 self-center" href="/hisobotlar">Hisobotlar</Link>
-          {canEdit ? <Button type="button" variant="secondary" onClick={() => save("qoralama")}>Qoralama saqlash</Button> : null}
-          {canConfirm ? <Button type="button" variant="secondary" onClick={() => save("qaytarilgan")}>Qaytarish</Button> : null}
-          {canConfirm ? <Button type="button" onClick={() => save("tasdiqlangan")}>Ekspert tasdiqlasin</Button> : null}
+          <a className="text-sm underline underline-offset-4 self-center" href={`/api/baholash/${row.id}/fayl?tur=docx`}>Word</a>
+          <a className="text-sm underline underline-offset-4 self-center" href={`/api/baholash/${row.id}/fayl?tur=pdf`}>PDF</a>
+          {canEdit ? <Button type="button" variant="secondary" disabled={busy} onClick={() => void save("qoralama")}>Qoralama saqlash</Button> : null}
+          {canConfirm ? <Button type="button" variant="secondary" disabled={busy} onClick={() => void save("qaytarilgan")}>Qaytarish</Button> : null}
+          {canConfirm ? <Button type="button" disabled={busy} onClick={() => void save("tasdiqlangan")}>Ekspert tasdiqlasin</Button> : null}
         </div>
       </div>
     </div>

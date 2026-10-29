@@ -12,6 +12,9 @@ export type DocumentItem = {
   organ: string
   holat: AssessmentStatus
   versiya: string
+  oldingiVersiya: string
+  oldingi: string
+  matn: string
   sana: string
   maxfiylik: "ichki" | "maxfiy"
 }
@@ -51,12 +54,36 @@ export const organs = [
 ]
 
 export const documents: DocumentItem[] = [
-  { raqam: "TTB-01", turi: "loyixa", hujjatTuri: "qaror", nomi: "Kichik biznes litsenziyasini soddalashtirish", soha: "Tadbirkorlik", organ: "iqtisod", holat: "tekshiruvda", versiya: "1.1", sana: "12.03.2026", maxfiylik: "ichki" },
-  { raqam: "TTB-02", turi: "qabul_qilingan", hujjatTuri: "farmoyish", nomi: "Qurilish ruxsatnomasi muddatlarini qisqartirish", soha: "Qurilish", organ: "qurilish", holat: "monitoring", versiya: "2.0", sana: "20.01.2026", maxfiylik: "ichki" },
-  { raqam: "TTB-03", turi: "loyixa", hujjatTuri: "bayon", nomi: "Elektron tibbiy yo'llanma tartibi", soha: "Sog'liq", organ: "sogliq", holat: "qoralama", versiya: "0.9", sana: "05.04.2026", maxfiylik: "ichki" },
-  { raqam: "TTB-04", turi: "qabul_qilingan", hujjatTuri: "qaror", nomi: "Yuk tashishga elektron ruxsat", soha: "Transport", organ: "transport", holat: "tasdiqlangan", versiya: "1.0", sana: "18.02.2026", maxfiylik: "ichki" },
-  { raqam: "TTB-05", turi: "loyixa", hujjatTuri: "farmoyish", nomi: "Davlat xizmatlari portalini kengaytirish", soha: "Raqamlashtirish", organ: "raqamli", holat: "qaytarilgan", versiya: "1.2", sana: "28.03.2026", maxfiylik: "ichki" },
-  { raqam: "TTB-06", turi: "loyixa", hujjatTuri: "qaror", nomi: "Maxfiy tartibga solish choralari (namuna)", soha: "Ichki", organ: "iqtisod", holat: "qoralama", versiya: "0.1", sana: "01.04.2026", maxfiylik: "maxfiy" },
+  {
+    raqam: "TTB-01", turi: "loyixa", hujjatTuri: "qaror", nomi: "Kichik biznes litsenziyasini soddalashtirish", soha: "Tadbirkorlik", organ: "iqtisod", holat: "tekshiruvda", versiya: "1.1", oldingiVersiya: "1.0", sana: "12.03.2026", maxfiylik: "ichki",
+    oldingi: "Litsenziya uchun 7 ta hujjat talab qilinadi.\nMuddat 15 kun.\nTo'lov naqd qabul qilinadi.",
+    matn: "Litsenziya uchun 4 ta hujjat talab qilinadi.\nMuddat 5 kun.\nTo'lov naqd qabul qilinadi.",
+  },
+  {
+    raqam: "TTB-02", turi: "qabul_qilingan", hujjatTuri: "farmoyish", nomi: "Qurilish ruxsatnomasi muddatlarini qisqartirish", soha: "Qurilish", organ: "qurilish", holat: "monitoring", versiya: "2.0", oldingiVersiya: "1.3", sana: "20.01.2026", maxfiylik: "ichki",
+    oldingi: "Ruxsat muddati 40 kun.\nQo'lda navbat.",
+    matn: "Ruxsat muddati 20 kun.\nElektron navbat.",
+  },
+  {
+    raqam: "TTB-03", turi: "loyixa", hujjatTuri: "bayon", nomi: "Elektron tibbiy yo'llanma tartibi", soha: "Sog'liq", organ: "sogliq", holat: "qoralama", versiya: "0.9", oldingiVersiya: "0.8", sana: "05.04.2026", maxfiylik: "ichki",
+    oldingi: "Yo'llanma qog'ozda beriladi.",
+    matn: "Yo'llanma elektron ariza orqali beriladi.",
+  },
+  {
+    raqam: "TTB-04", turi: "qabul_qilingan", hujjatTuri: "qaror", nomi: "Yuk tashishga elektron ruxsat", soha: "Transport", organ: "transport", holat: "tasdiqlangan", versiya: "1.0", oldingiVersiya: "0.4", sana: "18.02.2026", maxfiylik: "ichki",
+    oldingi: "Ruxsatnoma qog'oz blankada.",
+    matn: "Ruxsatnoma elektron reyestrda.",
+  },
+  {
+    raqam: "TTB-05", turi: "loyixa", hujjatTuri: "farmoyish", nomi: "Davlat xizmatlari portalini kengaytirish", soha: "Raqamlashtirish", organ: "raqamli", holat: "qaytarilgan", versiya: "1.2", oldingiVersiya: "1.1", sana: "28.03.2026", maxfiylik: "ichki",
+    oldingi: "Portalda 8 ta xizmat bor.",
+    matn: "Portalda 12 ta xizmat rejalashtirilgan.",
+  },
+  {
+    raqam: "TTB-06", turi: "loyixa", hujjatTuri: "qaror", nomi: "Maxfiy tartibga solish choralari (namuna)", soha: "Ichki", organ: "iqtisod", holat: "qoralama", versiya: "0.1", oldingiVersiya: "0.1", sana: "01.04.2026", maxfiylik: "maxfiy",
+    oldingi: "Maxfiy matn ko'rsatilmaydi.",
+    matn: "Maxfiy matn ko'rsatilmaydi.",
+  },
 ]
 
 export const assessments: Assessment[] = [
@@ -198,11 +225,32 @@ export function visibleDocuments() {
   return documents.filter((row) => row.maxfiylik !== "maxfiy")
 }
 
-export function visibleAssessments() {
-  return assessments.filter((row) => {
+export function visibleAssessments(source: Assessment[] = assessments) {
+  return source.filter((row) => {
     const doc = documents.find((item) => item.raqam === row.hujjat)
     return doc?.maxfiylik !== "maxfiy"
   })
+}
+
+export function amount(value: string) {
+  const trimmed = value.trim()
+  if (!/^\d+(\.\d+)?$/.test(trimmed)) return null
+  return Number(trimmed)
+}
+
+export function assessmentGaps(row: Assessment, holat: AssessmentStatus) {
+  const gaps: string[] = []
+  if (!row.muammo.trim()) gaps.push("Muammo")
+  if (!row.maqsad.trim()) gaps.push("Maqsad")
+  if (!row.muqobil.trim()) gaps.push("Muqobil yechimlar")
+  if (holat === "tasdiqlangan") {
+    if (!row.tadbirkor.trim()) gaps.push("Tadbirkorlik")
+    if (!row.fuqaro.trim()) gaps.push("Fuqarolar")
+    if (!row.davlat.trim()) gaps.push("Davlat organlari")
+    if (amount(row.xarajat) === null) gaps.push("Xarajat")
+    if (amount(row.foyda) === null) gaps.push("Foyda")
+  }
+  return gaps
 }
 
 export function money(value: string, flag: "ha" | "yoq") {
@@ -229,30 +277,30 @@ export function outcomeGap(row: Assessment) {
   return Math.round((actual / planned) * 100)
 }
 
-export function averageNet() {
-  const values = visibleAssessments().map(netEffect).filter((value): value is number => value !== null)
+export function averageNet(source?: Assessment[]) {
+  const values = visibleAssessments(source).map(netEffect).filter((value): value is number => value !== null)
   if (!values.length) return null
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
 }
 
-export function averageBurden() {
-  const values = visibleAssessments().map(burden).filter((value): value is number => value !== null)
+export function averageBurden(source?: Assessment[]) {
+  const values = visibleAssessments(source).map(burden).filter((value): value is number => value !== null)
   if (!values.length) return null
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
 }
 
-export function averageOutcome() {
-  const values = visibleAssessments().map(outcomeGap).filter((value): value is number => value !== null)
+export function averageOutcome(source?: Assessment[]) {
+  const values = visibleAssessments(source).map(outcomeGap).filter((value): value is number => value !== null)
   if (!values.length) return null
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
 }
 
-export function countStatus(status: AssessmentStatus) {
-  return visibleAssessments().filter((row) => row.holat === status).length
+export function countStatus(status: AssessmentStatus, source?: Assessment[]) {
+  return visibleAssessments(source).filter((row) => row.holat === status).length
 }
 
-export function assessmentRows(): DataRow[] {
-  return visibleAssessments().map((row) => ({
+export function assessmentRows(source?: Assessment[]): DataRow[] {
+  return visibleAssessments(source).map((row) => ({
     raqam: row.id,
     hujjat: row.hujjat,
     turi: row.turi,
@@ -280,21 +328,21 @@ export function documentRows(): DataRow[] {
   }))
 }
 
-export function reportRows(): DataRow[] {
-  return visibleAssessments().map((row) => ({
+export function reportRows(source?: Assessment[]): DataRow[] {
+  return visibleAssessments(source).map((row) => ({
     raqam: `HS-${row.id}`,
     hujjat: row.hujjat,
     turi: row.turi,
     holat: row.holat === "tasdiqlangan" || row.holat === "monitoring" ? "tasdiqlangan" : row.holat === "qaytarilgan" ? "qaytarilgan" : "kutilmoqda",
     organ: row.organ,
     shakl: "Namuna hisobot shakli",
-    fayl: "PDF / Word",
+    fayl: row.id,
     yangilangan: row.yangilangan,
   }))
 }
 
-export function monitoringRows(): DataRow[] {
-  return visibleAssessments()
+export function monitoringRows(source?: Assessment[]): DataRow[] {
+  return visibleAssessments(source)
     .filter((row) => row.turi === "keyingi" || row.holat === "monitoring" || row.holat === "tasdiqlangan")
     .map((row) => ({
       raqam: row.id,
@@ -319,8 +367,8 @@ export function monthSeries() {
   }))
 }
 
-export function statusShare() {
-  const rows = visibleAssessments()
+export function statusShare(source?: Assessment[]) {
+  const rows = visibleAssessments(source)
   const keys = ["tasdiqlangan", "tekshiruvda", "qoralama"] as const
   const mapped = rows.map((row) => {
     if (row.holat === "monitoring") return "tasdiqlangan"
@@ -369,7 +417,7 @@ export const reportColumns: Column[] = [
   { key: "holat", label: "Holat", kind: "status" },
   { key: "organ", label: "Organ" },
   { key: "shakl", label: "Shakl" },
-  { key: "fayl", label: "Format" },
+  { key: "fayl", label: "Format", kind: "files" },
   { key: "yangilangan", label: "Yangilangan" },
 ]
 

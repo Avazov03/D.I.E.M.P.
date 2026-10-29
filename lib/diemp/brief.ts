@@ -1,197 +1,83 @@
 import { statusLabel } from "@/lib/diemp/labels"
-import {
-  averageApproved,
-  deadlineRate,
-  decisions,
-  evidence,
-  events,
-  kpis,
-  organizations,
-  reports,
-  risks,
-  visibleTasks,
-  type DataRow,
-} from "@/lib/diemp/sample"
-import { extraReports } from "@/lib/diemp/inbox"
-import { storedDecisions, storedTasks } from "@/lib/diemp/db"
+import { averageBurden, averageNet, averageOutcome, burden, netEffect, organName, outcomeGap, visibleAssessments, visibleDocuments } from "@/lib/diemp/ttb"
+import { loadAssessments } from "@/lib/diemp/ttb-live"
 
 export type OfficialFigures = {
-  jismoniy: number | null
-  moliyaviy: number | null
-  muddat: number | null
+  sof: number | null
+  yuk: number | null
+  natija: number | null
 }
-
-const orgName = new Map<string, string>(organizations.map((org) => [org.kod, org.nom]))
 
 function label(value: string) {
   return statusLabel[value] ?? value
 }
 
-function open(rows: DataRow[]) {
-  return rows.filter((row) => row.maxfiylik !== "maxfiy")
-}
-
-function confirmedPercent(row: DataRow, valueKey: string, flagKey: string) {
-  if (row[flagKey] !== "ha") return "tasdiqlanmagan, rasmiy foizga kirmaydi"
-  return `${row[valueKey]}%`
-}
-
-export function officialFigures(): OfficialFigures {
-  const rows = visibleTasks()
-  return {
-    jismoniy: averageApproved(rows, "jismoniy", "jismoniyTasdiq"),
-    moliyaviy: averageApproved(rows, "moliyaviy", "moliyaviyTasdiq"),
-    muddat: deadlineRate(rows),
-  }
-}
-
 export async function analysisBrief() {
-  const rows = visibleTasks()
-  const figures = officialFigures()
+  const rows = visibleAssessments(await loadAssessments())
+  const figures: OfficialFigures = {
+    sof: averageNet(rows),
+    yuk: averageBurden(rows),
+    natija: averageOutcome(rows),
+  }
   const ids = new Set<string>()
   const remember = (value?: string) => {
-    if (value && value !== "—") ids.add(value)
+    if (value) ids.add(value)
   }
 
-  const qarorlar = open(decisions).map((row) => {
+  const hujjatlar = visibleDocuments().map((row) => {
     remember(row.raqam)
     return {
       id: row.raqam,
-      turi: label(row.turi),
       nomi: row.nomi,
-      sana: row.sana,
+      turi: label(row.turi),
       holat: label(row.holat),
-    }
-  })
-
-  const yuklanganQarorlar = (await storedDecisions()).map((row) => {
-    remember(row.raqam)
-    return { id: row.raqam, turi: "Qaror", nomi: row.nomi, sana: row.sana || "aniqlanmagan", holat: "Ijroda", manba: "Yuklangan hujjat" }
-  })
-
-  const topshiriqlar = rows.map((row) => {
-    remember(row.raqam)
-    remember(row.qaror)
-    return {
-      id: row.raqam,
-      qaror: row.qaror,
+      versiya: row.versiya,
+      organ: organName(row.organ),
       matn: row.matn,
-      tashkilot: orgName.get(row.tashkilot) ?? row.tashkilot,
-      muddat: row.muddat,
-      holat: label(row.holat),
-      muddatHolati: label(row.muddatKod),
-      xatar: label(row.xatar),
-      jismoniy: confirmedPercent(row, "jismoniy", "jismoniyTasdiq"),
-      moliyaviy: confirmedPercent(row, "moliyaviy", "moliyaviyTasdiq"),
     }
   })
 
-  const yuklanganTopshiriqlar = (await storedTasks()).map((row) => {
-    remember(row.raqam)
-    remember(row.qaror)
+  const baholashlar = rows.map((row) => {
+    remember(row.id)
+    remember(row.hujjat)
+    const sof = netEffect(row)
+    const yuk = burden(row)
+    const natija = outcomeGap(row)
     return {
-      id: row.raqam,
-      qaror: row.qaror,
-      matn: row.matn,
-      tashkilot: orgName.get(row.tashkilot) ?? row.tashkilot,
-      muddat: row.muddat || "aniqlanmagan",
-      holat: "Ijroda",
-      jismoniy: "tasdiqlanmagan, rasmiy foizga kirmaydi",
-      moliyaviy: "tasdiqlanmagan, rasmiy foizga kirmaydi",
-      manba: "Yuklangan hujjat, odam tasdiqlagan",
-    }
-  })
-
-  const hisobotlar = [...reports, ...extraReports()].map((row) => {
-    remember(row.raqam)
-    remember(row.topshiriq)
-    return {
-      id: row.raqam,
-      topshiriq: row.topshiriq,
-      davr: row.davr,
-      tashkilot: orgName.get(row.tashkilot) ?? row.tashkilot,
+      id: row.id,
+      hujjat: row.hujjat,
+      turi: label(row.turi),
       holat: label(row.holat),
-      hajm: row.hajm,
+      organ: organName(row.organ),
       muammo: row.muammo,
+      maqsad: row.maqsad,
+      muqobil: row.muqobil,
+      sof: sof === null ? "Hisoblanmaydi" : sof,
+      yuk: yuk === null ? "Hisoblanmaydi" : yuk,
+      natija: natija === null ? "Hisoblanmaydi" : natija,
     }
   })
-
-  const dalillar = open(evidence).map((row) => {
-    remember(row.raqam)
-    remember(row.topshiriq)
-    return {
-      id: row.raqam,
-      topshiriq: row.topshiriq,
-      tur: row.tur,
-      holat: label(row.holat),
-      sana: row.sana,
-    }
-  })
-
-  const korsatkichlar = kpis.map((row) => {
-    remember(row.nom)
-    remember(row.manba)
-    return {
-      id: row.nom,
-      tur: label(row.tur),
-      olchov: row.olchov,
-      reja: row.reja,
-      tasdiqlangan: row.tasdiq,
-      formula: row.formula,
-      natija: row.natija,
-      holat: label(row.holat),
-      manba: row.manba,
-    }
-  })
-
-  const xatarlar = open(risks).map((row) => {
-    remember(row.topshiriq)
-    return {
-      topshiriq: row.topshiriq,
-      daraja: label(row.daraja),
-      tur: row.tur,
-      sabab: row.sabab,
-      manba: row.manba,
-      tavsiya: row.tavsiya,
-    }
-  })
-
-  const hodisalar = events
-    .filter((row) => row.holat !== "maxfiy" && !row.obyekt.startsWith("NM-05"))
-    .map((row) => {
-      remember(row.obyekt)
-      return { vaqt: row.vaqt, hodisa: row.hodisa, obyekt: row.obyekt, izoh: row.izoh }
-    })
 
   const kontekst = {
-    manba: "Namuna to'plami va odam tasdiqlagan yuklangan hujjatlar. Bu jonli davlat bazasi emas.",
-    maxfiy: "Maxfiy yozuvlar bu kontekstga kiritilmagan. Matnini taxmin qilma.",
+    manba: "Namuna baholashlar. Bu jonli davlat bazasi emas.",
+    maxfiy: "Maxfiy hujjatlar bu kontekstga kiritilmagan. Matnini taxmin qilma.",
     rasmiy: {
-      jismoniy_bajarilish_foiz: figures.jismoniy,
-      moliyaviy_bajarilish_foiz: figures.moliyaviy,
-      muddatga_rioya_foiz: figures.muddat,
-      qoida: "Bu uchta foiz kodda hisoblangan. Boshqa foiz yozma. Jismoniy va moliyaviy ko'rsatkich bir xil emas. Tasdiqlanmagan qiymat rasmiy foizga kirmaydi. Reja 0 yoki formula tasdiqlanmagan bo'lsa natija Hisoblanmaydi.",
+      sof: figures.sof,
+      yuk: figures.yuk,
+      natija: figures.natija,
+      qoida: "Bu uchta qiymat kodda hisoblangan. Boshqa foiz yozma. Tasdiqlanmagan xarajat, foyda, yuk yoki reja rasmiy songa kirmaydi. Reja 0 bo'lsa natija Hisoblanmaydi.",
     },
-    qarorlar: [...qarorlar, ...yuklanganQarorlar],
-    topshiriqlar: [...topshiriqlar, ...yuklanganTopshiriqlar],
-    hisobotlar,
-    dalillar,
-    korsatkichlar,
-    xatarlar,
-    hodisalar,
+    hujjatlar,
+    baholashlar,
   }
 
   return { kontekst, ids, figures }
 }
 
 export async function sourceHref(id: string) {
-  if ((await storedTasks()).some((row) => row.raqam === id)) return "/topshiriqlar"
-  if ((await storedDecisions()).some((row) => row.raqam === id)) return "/qarorlar"
-  if (/^NM-\d{2}-\d{2}$/.test(id)) return "/topshiriqlar"
-  if (/^NM-\d{2}$/.test(id)) return "/qarorlar"
-  if (/^HS-\d+$/.test(id)) return "/hisobotlar"
-  if (/^DL-\d+$/.test(id)) return "/dalillar"
-  if (kpis.some((row) => row.nom === id)) return "/kpi"
-  if (risks.some((row) => row.topshiriq === id && row.maxfiylik !== "maxfiy")) return "/xatarlar"
+  const rows = visibleAssessments(await loadAssessments())
+  if (rows.some((row) => row.id === id)) return `/baholash/${id}`
+  if (visibleDocuments().some((row) => row.raqam === id)) return `/reyestr/${id}`
+  if (/^HS-BH-\d{2}$/.test(id)) return "/hisobotlar"
   return null
 }

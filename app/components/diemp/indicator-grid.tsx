@@ -6,21 +6,6 @@ import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import { averageBurden, averageNet, averageOutcome, countStatus, visibleAssessments } from "@/lib/diemp/ttb"
-
-const net = averageNet()
-const burden = averageBurden()
-const outcome = averageOutcome()
-const confirmed = countStatus("tasdiqlangan") + countStatus("monitoring")
-const total = visibleAssessments().length
-const confirmRate = total ? Math.round((confirmed / total) * 100) : null
-
-const cells: { href: string; title: string; value: number | null; suffix: string; hint: string; icon: LucideIcon }[] = [
-  { href: "/baholash", title: "O'rtacha sof ta'sir", value: net, suffix: "", hint: "Tasdiqlangan foyda − xarajat", icon: Gauge },
-  { href: "/baholash", title: "Ma'muriy yuk", value: burden, suffix: "", hint: "Tasdiqlangan yuk ballari o'rtachasi", icon: Landmark },
-  { href: "/monitoring", title: "Reja bajarilishi", value: outcome, suffix: "%", hint: "Haqiqiy / reja, faqat tasdiqlangan", icon: Timer },
-  { href: "/hisobotlar?holat=tasdiqlangan", title: "Tasdiq ulushi", value: confirmRate, suffix: "%", hint: `${confirmed} / ${total} baholash`, icon: ShieldCheck },
-]
 
 function RateRing({ value, label, max = 100 }: { value: number | null; label: string; max?: number }) {
   const amount = value === null ? 0 : Math.min(100, Math.round((value / max) * 100))
@@ -36,7 +21,27 @@ function RateRing({ value, label, max = 100 }: { value: number | null; label: st
   )
 }
 
-export function IndicatorGrid() {
+export function IndicatorGrid({
+  net,
+  burden,
+  outcome,
+  confirmed,
+  total,
+}: {
+  net: number | null
+  burden: number | null
+  outcome: number | null
+  confirmed: number
+  total: number
+}) {
+  const confirmRate = total ? Math.round((confirmed / total) * 100) : null
+  const cells: { href: string; title: string; value: number | null; suffix: string; hint: string; icon: LucideIcon }[] = [
+    { href: "/baholash", title: "O'rtacha sof ta'sir", value: net, suffix: "", hint: "Tasdiqlangan foyda − xarajat", icon: Gauge },
+    { href: "/baholash", title: "Ma'muriy yuk", value: burden, suffix: "", hint: "Tasdiqlangan yuk ballari o'rtachasi", icon: Landmark },
+    { href: "/monitoring", title: "Reja bajarilishi", value: outcome, suffix: "%", hint: "Haqiqiy / reja, faqat tasdiqlangan", icon: Timer },
+    { href: "/hisobotlar?holat=tasdiqlangan", title: "Tasdiq ulushi", value: confirmRate, suffix: "%", hint: `${confirmed} / ${total} baholash`, icon: ShieldCheck },
+  ]
+
   return (
     <DashboardCard className="flex flex-col gap-0! pb-0!">
       <CardHeader className="border-b border-border">

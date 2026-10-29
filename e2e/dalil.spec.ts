@@ -32,4 +32,6 @@ test("ekspert baholashni tasdiqlay oladi", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Ekspert tasdiqlasin" })).toBeVisible()
   await page.getByRole("button", { name: "Ekspert tasdiqlasin" }).click()
   await expect(page.getByText(/Tasdiqlandi/)).toBeVisible()
+  await page.reload()
+  await expect(page.getByText("Tasdiqlangan").first()).toBeVisible()
 })

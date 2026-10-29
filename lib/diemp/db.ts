@@ -80,6 +80,10 @@ async function open() {
           holat TEXT NOT NULL,
           izoh TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS baholash (
+          id TEXT PRIMARY KEY,
+          json TEXT NOT NULL
+        );
       `)
   for (const sql of [
     "ALTER TABLE topshiriq ADD COLUMN holat TEXT NOT NULL DEFAULT 'ijroda'",
@@ -288,5 +292,21 @@ export async function evidenceById(id: string) {
 export async function setEvidenceStatus(id: string, holat: string) {
   const database = await open()
   database.run("UPDATE dalil SET holat = ? WHERE id = ?", [holat, id])
+  persist(database)
+}
+
+export async function readAssessmentJson() {
+  const database = await open()
+  const rows = many(database, "SELECT id, json FROM baholash")
+  database.close()
+  return rows.map((row) => ({ id: text(row.id), json: text(row.json) }))
+}
+
+export async function writeAssessmentJson(id: string, json: string) {
+  const database = await open()
+  database.run(
+    "INSERT INTO baholash (id, json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET json = excluded.json",
+    [id, json],
+  )
   persist(database)
 }

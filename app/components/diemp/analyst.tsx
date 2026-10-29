@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import { averageBurden, averageNet, averageOutcome, methodologyNote } from "@/lib/diemp/ttb"
+import { methodologyNote } from "@/lib/diemp/ttb"
 
 const questions = [
   { savol: "Qaysi baholashlar hali tasdiqlanmagan?", href: "/baholash?holat=tekshiruvda" },
@@ -52,7 +52,7 @@ export function AnalystPanel() {
         javob?: string
         manbalar?: { id: string; href: string }[]
         aniqlanmagan?: string[]
-        rasmiy?: { jismoniy?: number | null; moliyaviy?: number | null; muddat?: number | null }
+        rasmiy?: { sof?: number | null; yuk?: number | null; natija?: number | null }
         cheklov?: string
         xato?: string
       }
@@ -65,9 +65,9 @@ export function AnalystPanel() {
         manbalar: data.manbalar || [],
         aniqlanmagan: data.aniqlanmagan || [],
         rasmiy: {
-          sof: averageNet(),
-          yuk: averageBurden(),
-          natija: averageOutcome(),
+          sof: data.rasmiy?.sof ?? null,
+          yuk: data.rasmiy?.yuk ?? null,
+          natija: data.rasmiy?.natija ?? null,
         },
         cheklov: data.cheklov || "AI xulosasi rasmiy fakt emas va ekspert tasdig'isiz qaror hisoblanmaydi.",
       })

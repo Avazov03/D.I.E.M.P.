@@ -3,12 +3,14 @@ import { Building2 } from "lucide-react"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
-import { organName, organs, visibleAssessments } from "@/lib/diemp/ttb"
+import { organs, visibleAssessments } from "@/lib/diemp/ttb"
+import { loadAssessments } from "@/lib/diemp/ttb-live"
 import { StatusPill } from "@/app/components/diemp/status-pill"
 
-export function OrgTable() {
+export async function OrgTable() {
+  const itemsAll = visibleAssessments(await loadAssessments())
   const rows = organs.map((org) => {
-    const items = visibleAssessments().filter((row) => row.organ === org.kod)
+    const items = itemsAll.filter((row) => row.organ === org.kod)
     const open = items.filter((row) => row.holat === "qoralama" || row.holat === "tekshiruvda" || row.holat === "qaytarilgan").length
     const done = items.filter((row) => row.holat === "tasdiqlangan" || row.holat === "monitoring").length
     return { kod: org.kod, nom: org.nom, jami: items.length, ochiq: open, yopiq: done }
@@ -38,7 +40,7 @@ export function OrgTable() {
               <TableRow key={row.kod} className="border-border hover:bg-muted/30">
                 <TableCell className="px-4 py-3">
                   <Link href={`/baholash?organ=${row.kod}`} className="font-medium hover:underline underline-offset-4">
-                    {organName(row.kod)}
+                    {row.nom}
                   </Link>
                 </TableCell>
                 <TableCell className="px-4 py-3">{row.jami}</TableCell>

@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { Registry } from "@/app/components/diemp/registry"
-import { assessmentColumns, assessmentFilters, assessmentRows, organName } from "@/lib/diemp/ttb"
+import { assessmentColumns, assessmentFilters, organName } from "@/lib/diemp/ttb"
+import type { DataRow } from "@/lib/diemp/sample"
 import { roleLabel, type Role } from "@/lib/diemp/access"
 
 export function CabinetHeading({ rol, text }: { rol: Role; text: string }) {
@@ -19,13 +20,15 @@ export function TaskCabinet({
   text,
   organ,
   ids,
+  rows: source,
 }: {
   rol: Role
   text: string
   organ?: string | null
   ids?: string[]
+  rows: DataRow[]
 }) {
-  let rows = assessmentRows()
+  let rows = source
   if (organ) rows = rows.filter((row) => row.organ === organ)
   if (ids?.length) rows = rows.filter((row) => ids.includes(row.raqam))
   return (
@@ -46,8 +49,8 @@ export function TaskCabinet({
   )
 }
 
-export function ExecutorCabinet({ ids }: { ids: string[] }) {
-  const rows = assessmentRows().filter((row) => ids.includes(row.raqam))
+export function ExecutorCabinet({ ids, rows: source }: { ids: string[]; rows: DataRow[] }) {
+  const rows = source.filter((row) => ids.includes(row.raqam))
   return (
     <>
       <CabinetHeading rol="ijrochi" text="Sizga biriktirilgan baholash varaqalari. Tasdiqlanmaguncha rasmiy hisobot hisoblanmaydi." />

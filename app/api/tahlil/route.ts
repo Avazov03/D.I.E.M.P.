@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json(answer)
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI xizmati javob bermadi"
-    const known = ["Kalit sozlanmagan", "Kalit qabul qilinmadi", "AI javobi o'qilmadi", "AI javobi bo'sh", "AI modeli topilmadi"]
+    const known = ["Kalit sozlanmagan", "Kalit qabul qilinmadi", "AI javobi o'qilmadi", "AI javobi bo'sh", "AI modeli topilmadi", "AI hozir javob chegarasida. Birozdan keyin qayta bosing."]
     return NextResponse.json(
       { xato: known.includes(message) ? message : "AI xizmati javob bermadi. Rasmiy ko'rsatkichlar o'z holicha ishlaydi." },
       { status: 502 }

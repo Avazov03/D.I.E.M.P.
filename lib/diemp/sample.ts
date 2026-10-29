@@ -5,7 +5,7 @@ export type DataRow = Record<string, string>
 export type Column = {
   key: string
   label: string
-  kind?: "status" | "text"
+  kind?: "status" | "text" | "files"
 }
 
 export type FilterDef = {

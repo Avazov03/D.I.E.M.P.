@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { Suspense } from "react"
 import { Registry } from "@/app/components/diemp/registry"
 import { assessmentColumns, assessmentFilters, assessmentRows, methodologyNote, visibleAssessments } from "@/lib/diemp/ttb"
+import { loadAssessments } from "@/lib/diemp/ttb-live"
 import { currentUser } from "@/lib/diemp/session"
 
 export const metadata: Metadata = { title: "Baholash" }
@@ -11,12 +12,14 @@ export const metadata: Metadata = { title: "Baholash" }
 export default async function Page() {
   const user = await currentUser()
   if (!user) redirect("/auth/auth2/login")
+  const saved = await loadAssessments()
+  const listed = assessmentRows(saved)
   const rows = user.rol === "ijrochi"
-    ? assessmentRows().filter((row) => user.topshiriqlar.includes(row.raqam))
+    ? listed.filter((row) => user.topshiriqlar.includes(row.raqam))
     : user.rol === "koordinator" && user.tashkilot
-      ? assessmentRows().filter((row) => row.organ === user.tashkilot)
-      : assessmentRows()
-  const links = visibleAssessments()
+      ? listed.filter((row) => row.organ === user.tashkilot)
+      : listed
+  const links = visibleAssessments(saved)
     .filter((row) => rows.some((item) => item.raqam === row.id))
     .slice(0, 8)
   return (

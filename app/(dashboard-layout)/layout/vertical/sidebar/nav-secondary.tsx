@@ -4,17 +4,20 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Gauge } from "lucide-react"
 import { canOpen, type Role } from "@/lib/diemp/access"
-import { averageOutcome } from "@/lib/diemp/ttb"
 
 export function NavSecondary() {
   const [rol, setRol] = useState<Role | null>(null)
+  const [value, setValue] = useState<number | null>(null)
   useEffect(() => {
     void fetch("/api/sessiya")
       .then((response) => (response.ok ? response.json() : null))
       .then((data: { rol?: Role } | null) => setRol(data?.rol ?? null))
+    void fetch("/api/ttb")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { natija?: number | null } | null) => setValue(typeof data?.natija === "number" ? data.natija : null))
   }, [])
   if (!rol || !canOpen(rol, "/monitoring")) return null
-  const value = averageOutcome() ?? 0
+  const shown = value ?? 0
 
   return (
     <div className="-mx-4 border-t border-b border-border px-5 py-5">
@@ -26,10 +29,10 @@ export function NavSecondary() {
                 <Gauge className="size-5 shrink-0" />
                 <span className="font-medium text-base leading-6 text-foreground">Reja bajarilishi</span>
               </div>
-              <span className="font-medium text-base leading-6 text-foreground">{value}%</span>
+              <span className="font-medium text-base leading-6 text-foreground">{value === null ? "Hisoblanmaydi" : `${shown}%`}</span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-foreground/10 overflow-hidden">
-              <div className="h-full bg-foreground rounded-full" style={{ width: `${value}%` }} />
+              <div className="h-full bg-foreground rounded-full" style={{ width: `${shown}%` }} />
             </div>
           </div>
           <p className="text-sm font-normal leading-5 text-muted-foreground text-center">
