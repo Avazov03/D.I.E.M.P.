@@ -20,6 +20,7 @@ export type StatCard = {
   oldin: string
   tasdiq: string
   taklif: string
+  davr?: string
 }
 
 const chartConfig = {
@@ -39,7 +40,7 @@ function StatChart({ card }: { card: StatCard }) {
 
   useEffect(() => {
     const node = box.current
-    if (!node) return
+    if (!node || total < 4) return
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
       const speed = Math.min(5, Math.max(1, Math.round(Math.abs(event.deltaY) / 40)))
@@ -97,7 +98,7 @@ function StatChart({ card }: { card: StatCard }) {
         <p className="text-sm">{chosen}</p>
         <p className="text-xs text-muted-foreground">
           {span < total ? `Yillar ${view[0]?.yil}–${view[view.length - 1]?.yil}. ` : ""}
-          G&apos;ildirak yil oralig&apos;ini yaqinlashtiradi. Nuqtani bosing. Manba yillik: oy va kun rasmiy qatorda yo&apos;q.
+          G&apos;ildirak oralig&apos;ni yaqinlashtiradi. Nuqtani bosing. {card.davr ? "Chiziq ochiq qator. Katta son joriy e'lon." : "Manba yillik: oy va kun rasmiy qatorda yo'q."}
           {span < total ? (
             <button type="button" className="ml-2 underline underline-offset-4" onClick={() => { setSpan(total); setEnd(total) }}>Barcha yillar</button>
           ) : null}
@@ -107,12 +108,12 @@ function StatChart({ card }: { card: StatCard }) {
   )
 }
 
-export function StatBoard({ cards }: { cards: StatCard[] }) {
+export function StatBoard({ cards, title = "Statistika", note = "Boshlang'ich raqam Stat.uz dan. Rasmiy joriy son faqat ekspert tasdiqlagan ishdan siljiydi." }: { cards: StatCard[]; title?: string; note?: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-xl">Statistika</h2>
-        <p className="text-sm text-muted-foreground">Boshlang&apos;ich raqam Stat.uz dan. Rasmiy joriy son faqat ekspert tasdiqlagan ishdan siljiydi.</p>
+        <h2 className="text-xl">{title}</h2>
+        <p className="text-sm text-muted-foreground">{note}</p>
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {cards.map((card) => (
@@ -126,10 +127,11 @@ export function StatBoard({ cards }: { cards: StatCard[] }) {
             <CardContent className="flex flex-col gap-4 p-5">
               <div>
                 <p className="text-2xl font-semibold tracking-[-0.3px]">{card.joriy}</p>
+                {card.davr ? <p className="text-sm text-muted-foreground">{card.davr}</p> : null}
                 <p className="text-sm text-muted-foreground">Oldin {card.oldin}. Qo&apos;shilgan: {card.tasdiq}.</p>
                 {card.taklif ? <p className="text-sm text-muted-foreground">Taklif, hisobga kirmaydi: {card.taklif}</p> : null}
               </div>
-              <StatChart card={card} />
+              {card.qator.length > 1 ? <StatChart card={card} /> : null}
               <a className="text-xs text-muted-foreground underline underline-offset-4" href={card.havola} target="_blank" rel="noreferrer">
                 {card.manba}. Diagramma o&apos;lchovi: {card.chartBirlik}.
               </a>

@@ -1,28 +1,31 @@
+import { loadLiveStats } from "@/lib/diemp/banner"
 import { documentById, listImpacts, saveImpacts, storedDecisions, storedTasks } from "@/lib/diemp/db"
 import { isSecretText } from "@/lib/diemp/read-file"
-import { statistics } from "@/lib/diemp/stat-catalog"
+import { allStatistics } from "@/lib/diemp/stat-catalog"
 import { acceptProposal, effectiveAmount, proposalsFromText, type Proposal } from "@/lib/diemp/stat-math"
 
 const MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
-const schema = {
-  type: "OBJECT",
-  properties: {
-    tasirlar: {
-      type: "ARRAY",
-      items: {
-        type: "OBJECT",
-        properties: {
-          statistika: { type: "STRING", enum: statistics.map((item) => item.id) },
-          belgi: { type: "STRING", enum: ["+", "-"] },
-          miqdor: { type: "NUMBER" },
-          parchasi: { type: "STRING" },
+function impactSchema() {
+  return {
+    type: "OBJECT",
+    properties: {
+      tasirlar: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            statistika: { type: "STRING", enum: allStatistics().map((item) => item.id) },
+            belgi: { type: "STRING", enum: ["+", "-"] },
+            miqdor: { type: "NUMBER" },
+            parchasi: { type: "STRING" },
+          },
+          required: ["statistika", "belgi", "miqdor", "parchasi"],
         },
-        required: ["statistika", "belgi", "miqdor", "parchasi"],
       },
     },
-  },
-  required: ["tasirlar"],
+    required: ["tasirlar"],
+  }
 }
 
 async function askImpacts(text: string): Promise<Proposal[]> {
@@ -30,7 +33,7 @@ async function askImpacts(text: string): Promise<Proposal[]> {
   if (!key) return []
   const prompt = `Matn:\n${text.slice(0, 7000)}\n\nQaysi statistikaga aniq son bilan ta'sir bor?`
   const system = `Sen qaror matnini statistikaga bog'laysan.
-Ruxsat etilgan statistika: band (ish bilan band aholi, kishi), faol (iqtisodiy faol aholi, kishi), ishsizlik (foiz punkti), tadbirkor (tadbirkorlik subyekti, ta).
+Ruxsat etilgan statistika: band (ish bilan band aholi, kishi), faol (iqtisodiy faol aholi, kishi), ishsizlik (foiz punkti), tadbirkor (tadbirkorlik subyekti, ta), yaim, sanoat, qishloq, invest, qurilish, yuk, yolovchi, chakana, xizmat (bular foiz punkti), aholi (kishi).
 Qoidalar:
 - Miqdor matnda yozilgan bo'lsin. Yo'q sonni to'qima.
 - "ming" yozilgan sonni mingga ko'paytir: 40 ming ta = 40000, 250 ming kishi = 250000. Foiz punktini ko'paytirma.
@@ -44,7 +47,7 @@ Qoidalar:
       temperature: 0.1,
       maxOutputTokens: 1024,
       responseMimeType: "application/json",
-      responseSchema: schema,
+      responseSchema: impactSchema(),
     }
     if (!model.endsWith("lite")) generationConfig.thinkingConfig = { thinkingBudget: 0 }
     try {
@@ -101,6 +104,7 @@ function oneEach(rows: Proposal[]) {
 }
 
 export async function recordImpacts(raqam: string, text: string, holat: "taklif" | "tasdiqlangan") {
+  await loadLiveStats()
   const local = oneEach(proposalsFromText(text))
   let chosen = local
   if (!isSecretText(text)) {
@@ -112,6 +116,7 @@ export async function recordImpacts(raqam: string, text: string, holat: "taklif"
 }
 
 export async function repairImpacts() {
+  await loadLiveStats()
   const impacts = await listImpacts()
   const decisions = await storedDecisions()
   for (const decision of decisions) {

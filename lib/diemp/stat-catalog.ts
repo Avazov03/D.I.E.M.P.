@@ -1,4 +1,18 @@
-export type StatId = "band" | "faol" | "ishsizlik" | "tadbirkor"
+export type StatId =
+  | "band"
+  | "faol"
+  | "ishsizlik"
+  | "tadbirkor"
+  | "yaim"
+  | "sanoat"
+  | "qishloq"
+  | "invest"
+  | "qurilish"
+  | "yuk"
+  | "yolovchi"
+  | "chakana"
+  | "xizmat"
+  | "aholi"
 
 export type Statistic = {
   id: StatId
@@ -6,10 +20,12 @@ export type Statistic = {
   manba: string
   havola: string
   yil: number
-  qator: { yil: number; qiymat: number }[]
+  qator: { yil: number | string; qiymat: number }[]
   impactScale: number
   impactBirlik: string
   chartBirlik: string
+  eLon?: number
+  davr?: string
 }
 
 const band = [11628.4, 11919.1, 12223.8, 12523.3, 12818.4, 13058.3, 13298.4, 13520.3, 13273.1, 13541.1, 13236.4, 13538.9, 13706.2, 14014.2, 14261.9, 14933.9]
@@ -68,6 +84,20 @@ export const statistics: Statistic[] = [
   },
 ]
 
+let liveStats: Statistic[] = []
+
+export function registerLive(rows: Statistic[]) {
+  liveStats = rows
+}
+
+export function allStatistics() {
+  return [...statistics, ...liveStats]
+}
+
 export function statisticById(id: string) {
-  return statistics.find((item) => item.id === id) ?? null
+  return liveStats.find((item) => item.id === id) ?? statistics.find((item) => item.id === id) ?? null
+}
+
+export function isIndexStat(id: string) {
+  return id === "yaim" || id === "sanoat" || id === "qishloq" || id === "invest" || id === "qurilish" || id === "yuk" || id === "yolovchi" || id === "chakana" || id === "xizmat"
 }

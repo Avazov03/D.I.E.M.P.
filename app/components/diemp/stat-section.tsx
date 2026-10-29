@@ -1,4 +1,5 @@
 import { canJudgeEvidence, type User } from "@/lib/diemp/access"
+import { loadLiveStats } from "@/lib/diemp/banner"
 import { documentOwners, listImpacts, storedDecisions, storedTasks } from "@/lib/diemp/db"
 import { repairImpacts } from "@/lib/diemp/tasir"
 import { boardCards, decisionViews } from "@/lib/diemp/stat-math"
@@ -6,6 +7,7 @@ import { DecisionImpacts } from "@/app/components/diemp/decision-impact"
 import { StatBoard } from "@/app/components/diemp/stat-board"
 
 export async function StatSection({ user, decisionsOnly = false }: { user: User; decisionsOnly?: boolean }) {
+  const live = await loadLiveStats()
   await repairImpacts()
   const impacts = await listImpacts()
   const owners = await documentOwners()
@@ -21,7 +23,18 @@ export async function StatSection({ user, decisionsOnly = false }: { user: User;
   const views = decisionViews(decisions.map((decision) => ({ raqam: decision.raqam, nomi: decision.nomi, sana: decision.sana })), impacts)
   return (
     <div className="flex flex-col gap-6">
-      {decisionsOnly ? null : <StatBoard cards={boardCards(impacts)} />}
+      {decisionsOnly ? null : (
+        <>
+          {live.length ? (
+            <StatBoard
+              title="O'zbekiston raqamlarda"
+              note="Bu o'nta son stat.uz bosh sahifasidan olinadi. Chiziq bor joyda ochiq qator turadi. Qaror shu ko'rsatkichni foiz punktida aytsa, katta son siljiydi."
+              cards={boardCards(impacts, live)}
+            />
+          ) : null}
+          <StatBoard cards={boardCards(impacts)} />
+        </>
+      )}
       <DecisionImpacts decisions={views} canJudge={canJudgeEvidence(user.rol)} />
     </div>
   )

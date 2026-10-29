@@ -1,4 +1,4 @@
-import { statisticById, statistics, type StatId, type Statistic } from "@/lib/diemp/stat-catalog"
+import { isIndexStat, statisticById, statistics, type StatId, type Statistic } from "@/lib/diemp/stat-catalog"
 
 export type ImpactInput = {
   id: string
@@ -17,11 +17,21 @@ export type Proposal = {
   parchasi: string
 }
 
-const rules: { id: StatId; keys: RegExp; quoted: RegExp }[] = [
-  { id: "ishsizlik", keys: /ishsizlik/, quoted: /ming/ },
-  { id: "tadbirkor", keys: /tadbirkor|korxona|yuridik shaxs|subyekt/, quoted: /ming kishi|foiz/ },
-  { id: "faol", keys: /iqtisodiy faol/, quoted: /foiz/ },
-  { id: "band", keys: /ishchi norma|ish o['’`]?rn|shtat birlik|shtat|bandlik|xodim|ish bilan band/, quoted: /foiz/ },
+const rules: { id: StatId; keys: RegExp }[] = [
+  { id: "ishsizlik", keys: /ishsizlik/ },
+  { id: "tadbirkor", keys: /tadbirkor|korxona|yuridik shaxs|subyekt/ },
+  { id: "faol", keys: /iqtisodiy faol/ },
+  { id: "band", keys: /ishchi norma|ish o['’`]?rn|shtat birlik|shtat|bandlik|xodim|ish bilan band/ },
+  { id: "yaim", keys: /yalpi ichki mahsulot|\byaim\b/ },
+  { id: "qishloq", keys: /qishloq|o'rmon va baliq|baliq xo'jal/ },
+  { id: "invest", keys: /asosiy kapital|investitsiya/ },
+  { id: "qurilish", keys: /qurilish ish/ },
+  { id: "yuk", keys: /yuk aylanm/ },
+  { id: "yolovchi", keys: /yo'lovchi aylanm|yolovchi aylanm/ },
+  { id: "chakana", keys: /chakana/ },
+  { id: "xizmat", keys: /xizmatlar hajmi|ko'rsatilgan xizmat|xizmat ko'rsatish/ },
+  { id: "sanoat", keys: /\bsanoat\b/ },
+  { id: "aholi", keys: /doimiy aholi|aholi soni/ },
 ]
 
 function fold(value: string) {
@@ -37,7 +47,7 @@ function group(value: number, digits: number) {
 }
 
 export function baselineOf(stat: Statistic) {
-  return stat.qator[stat.qator.length - 1]?.qiymat ?? 0
+  return stat.eLon ?? stat.qator[stat.qator.length - 1]?.qiymat ?? 0
 }
 
 export function signedAmount(belgi: "+" | "-", miqdor: number) {
@@ -45,7 +55,7 @@ export function signedAmount(belgi: "+" | "-", miqdor: number) {
 }
 
 export function effectiveAmount(statId: string, miqdor: number, text: string) {
-  if (statId === "ishsizlik" || !(miqdor > 0) || miqdor >= 2000) return miqdor
+  if (statId === "ishsizlik" || isIndexStat(statId) || !(miqdor > 0) || miqdor >= 2000) return miqdor
   const source = fold(text)
   const sentences = source.split(/[.\n;]+/).filter((sentence) => numberInText(sentence, miqdor))
   if (sentences.some((sentence) => /ming/.test(sentence))) return Math.round(miqdor * 1000)
@@ -68,21 +78,22 @@ export function currentOf(stat: Statistic, impacts: ImpactInput[]) {
 }
 
 export function formatImpact(stat: Statistic, miqdor: number) {
-  const digits = stat.id === "ishsizlik" ? 1 : 0
+  const digits = stat.id === "ishsizlik" || isIndexStat(stat.id) ? 1 : 0
   return `${group(Math.abs(miqdor), digits)} ${stat.impactBirlik}`
 }
 
 export function formatSeriesValue(statId: string, value: number) {
   if (statId === "band" || statId === "faol") return `${group(Math.round(value * 1000), 0)} kishi`
-  if (statId === "ishsizlik") return `${group(value, 1)}%`
+  if (statId === "ishsizlik" || isIndexStat(statId)) return `${group(value, 1)}%`
+  if (statId === "aholi") return `${group(Math.round(value), 0)} kishi`
   return `${group(Math.round(value), 0)} ta`
 }
 
 export function formatSeriesDelta(statId: string, delta: number) {
-  const quiet = statId === "ishsizlik" ? 0.05 : 0.5
+  const quiet = statId === "ishsizlik" || isIndexStat(statId) ? 0.05 : statId === "aholi" ? 1 : 0.5
   if (Math.abs(delta) < quiet) return "o'zgarish yo'q"
   const sign = delta > 0 ? "+" : "−"
-  if (statId === "ishsizlik") return `${sign}${group(Math.abs(delta), 1)} foiz punkti`
+  if (statId === "ishsizlik" || isIndexStat(statId)) return `${sign}${group(Math.abs(delta), 1)} foiz punkti`
   return `${sign}${formatSeriesValue(statId, Math.abs(delta))}`
 }
 
@@ -113,8 +124,8 @@ function sumText(stat: Statistic, impacts: ImpactInput[], holat: ImpactInput["ho
   return `${sign}${formatImpact(stat, sum)}`
 }
 
-export function boardCards(impacts: ImpactInput[]) {
-  return statistics.map((stat) => ({
+export function boardCards(impacts: ImpactInput[], stats: Statistic[] = statistics) {
+  return stats.map((stat) => ({
     id: stat.id,
     nomi: stat.nomi,
     manba: stat.manba,
@@ -123,8 +134,9 @@ export function boardCards(impacts: ImpactInput[]) {
     chartBirlik: stat.chartBirlik,
     qator: [
       ...stat.qator.map((point) => ({ yil: String(point.yil), qiymat: point.qiymat })),
-      ...(confirmedShift(stat, impacts) === 0 ? [] : [{ yil: "Hozir", qiymat: stat.id === "ishsizlik" ? Math.round(currentOf(stat, impacts) * 10) / 10 : currentOf(stat, impacts) }]),
+      ...(stat.eLon != null || confirmedShift(stat, impacts) === 0 ? [] : [{ yil: "Hozir", qiymat: stat.id === "ishsizlik" || isIndexStat(stat.id) ? Math.round(currentOf(stat, impacts) * 10) / 10 : currentOf(stat, impacts) }]),
     ],
+    davr: stat.davr || "",
     joriy: formatCurrent(stat, impacts),
     oldin: formatBaseline(stat),
     tasdiq: sumText(stat, impacts, "tasdiqlangan") || "Tasdiqlangan ta'sir yo'q",
@@ -189,7 +201,7 @@ function numberInText(text: string, value: number) {
 
 function sentenceSign(sentence: string): "+" | "-" | null {
   if (/qisqar|kamay|tugat|bekor|yopil|qisqartir|chiqarib|kamaytir/.test(sentence)) return "-"
-  if (/tashkil|ko'pay|yangi|ochil|qo'sh|yarat|kirit|joriy/.test(sentence)) return "+"
+  if (/tashkil|ko'pay|yangi|ochil|qo'sh|yarat|kirit|joriy|oshir|oshiril|orttir|ko'tar|kotar/.test(sentence)) return "+"
   return null
 }
 
@@ -205,7 +217,8 @@ export function proposalsFromText(text: string): Proposal[] {
   for (const sentence of sentences) {
     const rule = rules.find((item) => item.keys.test(sentence))
     if (!rule) continue
-    if (rule.id === "ishsizlik" && !/foiz|punkt|%/.test(sentence)) continue
+    if ((rule.id === "ishsizlik" || isIndexStat(rule.id)) && !/foiz|punkt|%/.test(sentence)) continue
+    if (rule.id === "aholi" && /foiz|punkt|%/.test(sentence)) continue
     const stat = statisticById(rule.id)
     if (!stat) continue
     const sign = sentenceSign(sentence)
@@ -217,6 +230,7 @@ export function proposalsFromText(text: string): Proposal[] {
     numbers.sort((a, b) => Math.abs(a.index - keyIndex) - Math.abs(b.index - keyIndex))
     const pick = numbers.find((item) => {
       if (rule.id === "ishsizlik") return item.value > 0 && item.value <= 5 && Math.abs(item.value - baselineOf(stat)) > 0.05
+      if (isIndexStat(rule.id)) return item.value > 0 && item.value <= 20 && Math.abs(item.value - baselineOf(stat)) > 0.2
       const quoted = /ming/.test(sentence) ? item.value : item.value * stat.impactScale
       if (baselineOf(stat) > 0 && Math.abs(quoted - baselineOf(stat)) / baselineOf(stat) < 0.02) return false
       const amount = /ming/.test(sentence) && item.value < 2000 ? item.value * 1000 : item.value
@@ -226,7 +240,7 @@ export function proposalsFromText(text: string): Proposal[] {
     })
     if (!pick) continue
     let miqdor = pick.value
-    if (rule.id !== "ishsizlik" && /ming/.test(sentence) && miqdor < 2000) miqdor = Math.round(miqdor * 1000)
+    if (rule.id !== "ishsizlik" && !isIndexStat(rule.id) && /ming/.test(sentence) && miqdor < 2000) miqdor = Math.round(miqdor * 1000)
     if (found.some((item) => item.statistika === rule.id)) continue
     const at = sentence.indexOf(pick.raw.trim())
     const from = Math.max(0, at - 30)
@@ -241,6 +255,8 @@ export function acceptProposal(text: string, proposal: Proposal) {
   if (!(proposal.belgi === "+" || proposal.belgi === "-")) return false
   if (!Number.isFinite(proposal.miqdor) || proposal.miqdor <= 0) return false
   if (proposal.statistika === "ishsizlik" && proposal.miqdor > 5) return false
+  if (isIndexStat(proposal.statistika) && proposal.miqdor > 20) return false
+  if (proposal.statistika === "aholi" && proposal.miqdor > 2000000) return false
   if ((proposal.statistika === "band" || proposal.statistika === "faol") && proposal.miqdor > 2000000) return false
   if (proposal.statistika === "tadbirkor" && proposal.miqdor > 500000) return false
   const source = fold(text)
