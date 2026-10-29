@@ -1,7 +1,7 @@
 import { documentById, saveImpacts, storedDecisions, storedTasks } from "@/lib/diemp/db"
 import { isSecretText } from "@/lib/diemp/read-file"
 import { statistics } from "@/lib/diemp/stat-catalog"
-import { acceptProposal, proposalsFromText, type Proposal } from "@/lib/diemp/stat-math"
+import { acceptProposal, effectiveAmount, proposalsFromText, type Proposal } from "@/lib/diemp/stat-math"
 
 const MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
@@ -33,6 +33,7 @@ async function askImpacts(text: string): Promise<Proposal[]> {
 Ruxsat etilgan statistika: band (ish bilan band aholi, kishi), faol (iqtisodiy faol aholi, kishi), ishsizlik (foiz punkti), tadbirkor (tadbirkorlik subyekti, ta).
 Qoidalar:
 - Miqdor matnda yozilgan bo'lsin. Yo'q sonni to'qima.
+- "ming" yozilgan sonni mingga ko'paytir: 40 ming ta = 40000, 250 ming kishi = 250000. Foiz punktini ko'paytirma.
 - parchasi matndan aynan olingan gap bo'lsin.
 - Universitet ishchi normasi, shtat, ish o'rni band ga yoziladi. Ish o'rnini ishsizlik foiziga aylantirma.
 - Yangi ish o'rni yoki subyekt belgi "+", qisqartirish yoki tugatish belgi "-".
@@ -66,7 +67,11 @@ Qoidalar:
         const proposal: Proposal = {
           statistika: item.statistika === "band" || item.statistika === "faol" || item.statistika === "ishsizlik" || item.statistika === "tadbirkor" ? item.statistika : "band",
           belgi: item.belgi === "-" ? "-" : "+",
-          miqdor: typeof item.miqdor === "number" ? item.miqdor : 0,
+          miqdor: effectiveAmount(
+            item.statistika === "faol" || item.statistika === "ishsizlik" || item.statistika === "tadbirkor" ? item.statistika : "band",
+            typeof item.miqdor === "number" ? item.miqdor : 0,
+            `${typeof item.parchasi === "string" ? item.parchasi : ""}\n${text}`,
+          ),
           parchasi: typeof item.parchasi === "string" ? item.parchasi : "",
         }
         if (item.statistika !== "band" && item.statistika !== "faol" && item.statistika !== "ishsizlik" && item.statistika !== "tadbirkor") return []

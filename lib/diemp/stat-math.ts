@@ -29,7 +29,11 @@ function fold(value: string) {
 }
 
 function group(value: number, digits: number) {
-  return new Intl.NumberFormat("uz-UZ", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value)
+  const negative = value < 0
+  const [whole, fraction = ""] = Math.abs(value).toFixed(digits).split(".")
+  const body = whole.replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  const text = digits > 0 ? `${body},${fraction}` : body
+  return negative ? `-${text}` : text
 }
 
 export function baselineOf(stat: Statistic) {
@@ -40,10 +44,22 @@ export function signedAmount(belgi: "+" | "-", miqdor: number) {
   return belgi === "-" ? -Math.abs(miqdor) : Math.abs(miqdor)
 }
 
+export function effectiveAmount(statId: string, miqdor: number, text: string) {
+  if (statId === "ishsizlik" || !(miqdor > 0) || miqdor >= 2000) return miqdor
+  const source = fold(text)
+  const sentences = source.split(/[.\n;]+/).filter((sentence) => numberInText(sentence, miqdor))
+  if (sentences.some((sentence) => /ming/.test(sentence))) return Math.round(miqdor * 1000)
+  return miqdor
+}
+
+function amountOf(item: ImpactInput) {
+  return effectiveAmount(item.statistika, item.miqdor, item.parchasi)
+}
+
 export function confirmedShift(stat: Statistic, impacts: ImpactInput[]) {
   return impacts
     .filter((item) => item.statistika === stat.id && item.holat === "tasdiqlangan")
-    .reduce((sum, item) => sum + signedAmount(item.belgi, item.miqdor) * stat.impactScale, 0)
+    .reduce((sum, item) => sum + signedAmount(item.belgi, amountOf(item)) * stat.impactScale, 0)
 }
 
 export function currentOf(stat: Statistic, impacts: ImpactInput[]) {
@@ -55,17 +71,31 @@ export function formatImpact(stat: Statistic, miqdor: number) {
   return `${group(Math.abs(miqdor), digits)} ${stat.impactBirlik}`
 }
 
+export function formatSeriesValue(statId: string, value: number) {
+  if (statId === "band" || statId === "faol") return `${group(Math.round(value * 1000), 0)} kishi`
+  if (statId === "ishsizlik") return `${group(value, 1)}%`
+  return `${group(Math.round(value), 0)} ta`
+}
+
+export function formatSeriesDelta(statId: string, delta: number) {
+  const quiet = statId === "ishsizlik" ? 0.05 : 0.5
+  if (Math.abs(delta) < quiet) return "o'zgarish yo'q"
+  const sign = delta > 0 ? "+" : "−"
+  return `${sign}${formatSeriesValue(statId, Math.abs(delta))}`
+}
+
+function formatBaseline(stat: Statistic) {
+  return formatSeriesValue(stat.id, baselineOf(stat))
+}
+
 export function formatCurrent(stat: Statistic, impacts: ImpactInput[]) {
-  const current = currentOf(stat, impacts)
-  if (stat.id === "band" || stat.id === "faol") return `${group(Math.round(current * 1000), 0)} kishi`
-  if (stat.id === "ishsizlik") return `${group(current, 1)}%`
-  return `${group(Math.round(current), 0)} ta`
+  return formatSeriesValue(stat.id, currentOf(stat, impacts))
 }
 
 function sumText(stat: Statistic, impacts: ImpactInput[], holat: ImpactInput["holat"]) {
   const rows = impacts.filter((item) => item.statistika === stat.id && item.holat === holat)
   if (!rows.length) return ""
-  const sum = rows.reduce((total, item) => total + signedAmount(item.belgi, item.miqdor), 0)
+  const sum = rows.reduce((total, item) => total + signedAmount(item.belgi, amountOf(item)), 0)
   if (!sum) return ""
   const sign = sum > 0 ? "+" : "−"
   return `${sign}${formatImpact(stat, sum)}`
@@ -84,6 +114,7 @@ export function boardCards(impacts: ImpactInput[]) {
       ...(confirmedShift(stat, impacts) === 0 ? [] : [{ yil: "Hozir", qiymat: stat.id === "ishsizlik" ? Math.round(currentOf(stat, impacts) * 10) / 10 : currentOf(stat, impacts) }]),
     ],
     joriy: formatCurrent(stat, impacts),
+    oldin: formatBaseline(stat),
     tasdiq: sumText(stat, impacts, "tasdiqlangan") || "Tasdiqlangan ta'sir yo'q",
     taklif: sumText(stat, impacts, "taklif"),
   }))
@@ -116,14 +147,15 @@ export function decisionViews(
       .filter((item) => item.qaror === decision.raqam && item.holat !== "rad")
       .map((item) => {
         const stat = statisticById(item.statistika)
+        const miqdor = amountOf(item)
         return {
           id: item.id,
           nomi: stat?.nomi || item.statistika,
           belgi: item.belgi,
-          matn: stat ? `${item.belgi}${formatImpact(stat, item.miqdor)}` : String(item.miqdor),
+          matn: stat ? `${item.belgi}${formatImpact(stat, miqdor)}` : String(miqdor),
           parchasi: item.parchasi,
           holat: item.holat,
-          miqdor: signedAmount(item.belgi, item.miqdor),
+          miqdor: signedAmount(item.belgi, miqdor),
         }
       }),
   }))
