@@ -9,7 +9,7 @@ import { organizations } from "@/lib/diemp/sample"
 import type { Draft, DraftTask } from "@/lib/diemp/draft"
 import { cn } from "@/lib/utils"
 
-const orgCodes = new Set(organizations.map((item) => item.kod))
+const orgCodes = new Set<string>(organizations.map((item) => item.kod))
 const openField = "border-[#2090F0]! bg-[#2090F0]/10! ring-2! ring-[#2090F0]/25!"
 
 function guessOrg(value: string) {
