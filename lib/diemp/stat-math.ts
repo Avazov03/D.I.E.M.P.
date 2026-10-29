@@ -57,6 +57,7 @@ function amountOf(item: ImpactInput) {
 }
 
 export function confirmedShift(stat: Statistic, impacts: ImpactInput[]) {
+  impacts = uniqueImpacts(impacts)
   return impacts
     .filter((item) => item.statistika === stat.id && item.holat === "tasdiqlangan")
     .reduce((sum, item) => sum + signedAmount(item.belgi, amountOf(item)) * stat.impactScale, 0)
@@ -81,7 +82,18 @@ export function formatSeriesDelta(statId: string, delta: number) {
   const quiet = statId === "ishsizlik" ? 0.05 : 0.5
   if (Math.abs(delta) < quiet) return "o'zgarish yo'q"
   const sign = delta > 0 ? "+" : "−"
+  if (statId === "ishsizlik") return `${sign}${group(Math.abs(delta), 1)} foiz punkti`
   return `${sign}${formatSeriesValue(statId, Math.abs(delta))}`
+}
+
+function uniqueImpacts(impacts: ImpactInput[]) {
+  const chosen = new Map<string, ImpactInput>()
+  for (const item of impacts) {
+    const key = `${item.qaror}:${item.statistika}:${item.holat}`
+    const current = chosen.get(key)
+    if (!current || amountOf(item) > amountOf(current)) chosen.set(key, item)
+  }
+  return [...chosen.values()]
 }
 
 function formatBaseline(stat: Statistic) {
@@ -93,7 +105,7 @@ export function formatCurrent(stat: Statistic, impacts: ImpactInput[]) {
 }
 
 function sumText(stat: Statistic, impacts: ImpactInput[], holat: ImpactInput["holat"]) {
-  const rows = impacts.filter((item) => item.statistika === stat.id && item.holat === holat)
+  const rows = uniqueImpacts(impacts).filter((item) => item.statistika === stat.id && item.holat === holat)
   if (!rows.length) return ""
   const sum = rows.reduce((total, item) => total + signedAmount(item.belgi, amountOf(item)), 0)
   if (!sum) return ""
@@ -143,7 +155,7 @@ export function decisionViews(
     raqam: decision.raqam,
     nomi: decision.nomi,
     sana: decision.sana || "—",
-    tasirlar: impacts
+    tasirlar: uniqueImpacts(impacts)
       .filter((item) => item.qaror === decision.raqam && item.holat !== "rad")
       .map((item) => {
         const stat = statisticById(item.statistika)

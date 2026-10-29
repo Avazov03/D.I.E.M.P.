@@ -1,10 +1,12 @@
 import { canJudgeEvidence, type User } from "@/lib/diemp/access"
 import { documentOwners, listImpacts, storedDecisions, storedTasks } from "@/lib/diemp/db"
+import { repairImpacts } from "@/lib/diemp/tasir"
 import { boardCards, decisionViews } from "@/lib/diemp/stat-math"
 import { DecisionImpacts } from "@/app/components/diemp/decision-impact"
 import { StatBoard } from "@/app/components/diemp/stat-board"
 
 export async function StatSection({ user, decisionsOnly = false }: { user: User; decisionsOnly?: boolean }) {
+  await repairImpacts()
   const impacts = await listImpacts()
   const owners = await documentOwners()
   const tasks = await storedTasks()

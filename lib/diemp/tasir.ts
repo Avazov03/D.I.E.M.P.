@@ -1,4 +1,4 @@
-import { documentById, saveImpacts, storedDecisions, storedTasks } from "@/lib/diemp/db"
+import { documentById, listImpacts, saveImpacts, storedDecisions, storedTasks } from "@/lib/diemp/db"
 import { isSecretText } from "@/lib/diemp/read-file"
 import { statistics } from "@/lib/diemp/stat-catalog"
 import { acceptProposal, effectiveAmount, proposalsFromText, type Proposal } from "@/lib/diemp/stat-math"
@@ -92,16 +92,45 @@ export async function decisionText(raqam: string) {
   return [decision.nomi, ...tasks.map((item) => item.matn), document?.matn ?? ""].filter(Boolean).join("\n").slice(0, 80000)
 }
 
+function oneEach(rows: Proposal[]) {
+  const chosen = new Map<string, Proposal>()
+  for (const row of rows) {
+    if (!chosen.has(row.statistika)) chosen.set(row.statistika, row)
+  }
+  return [...chosen.values()]
+}
+
 export async function recordImpacts(raqam: string, text: string, holat: "taklif" | "tasdiqlangan") {
-  const local = proposalsFromText(text)
+  const local = oneEach(proposalsFromText(text))
   let chosen = local
   if (!isSecretText(text)) {
-    const remote = await askImpacts(text)
-    if (remote.length) {
-      const ids = new Set(remote.map((item) => item.statistika))
-      chosen = [...remote, ...local.filter((item) => !ids.has(item.statistika))]
-    }
+    const remote = oneEach(await askImpacts(text))
+    chosen = [...local, ...remote.filter((item) => !local.some((row) => row.statistika === item.statistika))]
   }
   await saveImpacts(raqam, chosen, holat)
   return chosen
+}
+
+export async function repairImpacts() {
+  const impacts = await listImpacts()
+  const decisions = await storedDecisions()
+  for (const decision of decisions) {
+    const rows = impacts.filter((item) => item.qaror === decision.raqam && item.holat !== "rad")
+    if (!rows.length) continue
+    const text = await decisionText(decision.raqam)
+    if (!text || isSecretText(text)) continue
+    const local = oneEach(proposalsFromText(text))
+    if (!local.length) continue
+    const counts = new Map<string, number>()
+    for (const row of rows) counts.set(row.statistika, (counts.get(row.statistika) ?? 0) + 1)
+    const duplicate = [...counts.values()].some((count) => count > 1)
+    const missing = local.some((item) => !counts.has(item.statistika))
+    const wrong = local.some((item) => {
+      const stored = rows.find((row) => row.statistika === item.statistika)
+      return stored ? Math.abs(stored.miqdor - item.miqdor) > 0.001 : false
+    })
+    if (!duplicate && !missing && !wrong) continue
+    const holat = rows.some((row) => row.holat === "tasdiqlangan") ? "tasdiqlangan" : "taklif"
+    await saveImpacts(decision.raqam, local, holat)
+  }
 }
