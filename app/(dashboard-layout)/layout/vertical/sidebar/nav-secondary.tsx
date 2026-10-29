@@ -11,10 +11,14 @@ export function NavSecondary() {
   useEffect(() => {
     void fetch("/api/sessiya")
       .then((response) => (response.ok ? response.json() : null))
-      .then((data: { rol?: Role } | null) => setRol(data?.rol ?? null))
-    void fetch("/api/ttb")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { natija?: number | null } | null) => setValue(typeof data?.natija === "number" ? data.natija : null))
+      .then((data: { rol?: Role } | null) => {
+        const next = data?.rol ?? null
+        setRol(next)
+        if (!next || !canOpen(next, "/monitoring")) return
+        void fetch("/api/ttb")
+          .then((response) => (response.ok ? response.json() : null))
+          .then((body: { natija?: number | null } | null) => setValue(typeof body?.natija === "number" ? body.natija : null))
+      })
   }, [])
   if (!rol || !canOpen(rol, "/monitoring")) return null
   const shown = value ?? 0

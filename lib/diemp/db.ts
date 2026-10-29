@@ -230,6 +230,13 @@ export async function storedDecisions() {
   }))
 }
 
+export async function documentOwners() {
+  const database = await open()
+  const rows = many(database, "SELECT id, yuklovchi FROM hujjat")
+  database.close()
+  return new Map(rows.map((row) => [text(row.id), text(row.yuklovchi)]))
+}
+
 export async function storedTasks() {
   const database = await open()
   const rows = many(database, "SELECT raqam, qaror, matn, tashkilot, muddat, hujjat, holat FROM topshiriq ORDER BY raqam")

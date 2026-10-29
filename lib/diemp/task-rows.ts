@@ -1,5 +1,5 @@
 import type { User } from "@/lib/diemp/access"
-import { storedEvidence, storedTasks } from "@/lib/diemp/db"
+import { documentOwners, storedEvidence, storedTasks } from "@/lib/diemp/db"
 import type { DataRow } from "@/lib/diemp/sample"
 import { organName } from "@/lib/diemp/ttb"
 
@@ -13,15 +13,19 @@ export const taskColumns = [
   { key: "holat", label: "Holat", kind: "status" as const },
 ]
 
-export function canBringProof(user: User, organ: string) {
+export function canBringProof(user: User, organ: string, owns = false) {
   if (user.rol === "super_admin") return true
-  return user.rol === "koordinator" && user.tashkilot === organ
+  if (user.rol !== "koordinator") return false
+  return owns || user.tashkilot === organ
 }
 
 export async function taskRows(user: User, onlyReview = false) {
   const proofs = await storedEvidence()
+  const owners = await documentOwners()
   let tasks = await storedTasks()
-  if (user.rol === "koordinator" && user.tashkilot) tasks = tasks.filter((row) => row.tashkilot === user.tashkilot)
+  if (user.rol === "koordinator" && user.tashkilot) {
+    tasks = tasks.filter((row) => row.tashkilot === user.tashkilot || owners.get(row.hujjat) === user.id)
+  }
   if (user.rol === "ijrochi") tasks = tasks.filter((row) => user.topshiriqlar.includes(row.raqam))
   const rows: DataRow[] = tasks.map((task) => {
     const proof = proofs.find((item) => item.topshiriq === task.raqam)

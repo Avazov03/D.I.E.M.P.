@@ -2,7 +2,7 @@ import { mkdirSync, unlinkSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { NextResponse } from "next/server"
 import { canBringProof } from "@/lib/diemp/task-rows"
-import { dataDir, replaceProof, setEvidenceNote, storedTasks } from "@/lib/diemp/db"
+import { dataDir, documentOwners, replaceProof, setEvidenceNote, storedTasks } from "@/lib/diemp/db"
 import { isSecretText, readOffice } from "@/lib/diemp/read-file"
 import { currentUser } from "@/lib/diemp/session"
 import { matchEvidence, matchText } from "@/lib/diemp/vision"
@@ -20,7 +20,8 @@ export async function POST(request: Request, context: { params: Promise<{ raqam:
   const { raqam } = await context.params
   const task = (await storedTasks()).find((item) => item.raqam === raqam)
   if (!task) return NextResponse.json({ xato: "Topshiriq topilmadi" }, { status: 404 })
-  if (!canBringProof(user, task.tashkilot)) return NextResponse.json({ xato: "Dalilni topshiriq tushgan organ yuklaydi" }, { status: 403 })
+  const owns = (await documentOwners()).get(task.hujjat) === user.id
+  if (!canBringProof(user, task.tashkilot, owns)) return NextResponse.json({ xato: "Dalilni topshiriq tushgan organ yuklaydi" }, { status: 403 })
 
   let form: FormData
   try {

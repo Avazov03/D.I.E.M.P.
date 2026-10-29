@@ -16,7 +16,7 @@ export default async function Page() {
       <Registry
         title="Topshiriqlar"
         description={mine
-          ? "Sizga tushgan topshiriq. Qatorni ochib, bajarilganlik faylini yuklang."
+          ? "Siz kiritgan va sizga tushgan topshiriq. Qatorni ochib, bajarilganlik faylini yuklang."
           : "Har bir topshiriq, kimda ekani, dalil va ekspert qarori. Qatorni oching."}
         columns={taskColumns}
         rows={await taskRows(user)}

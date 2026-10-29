@@ -8,7 +8,7 @@ import { EvidenceCheck } from "@/app/components/diemp/evidence-check"
 import { ProofUpload } from "@/app/components/diemp/proof-upload"
 import { StatusPill } from "@/app/components/diemp/status-pill"
 import { canCheckEvidence, canJudgeEvidence } from "@/lib/diemp/access"
-import { dataDir, storedEvidence, storedTasks } from "@/lib/diemp/db"
+import { dataDir, documentOwners, storedEvidence, storedTasks } from "@/lib/diemp/db"
 import { readDocument } from "@/lib/diemp/read-file"
 import { currentUser } from "@/lib/diemp/session"
 import { canBringProof } from "@/lib/diemp/task-rows"
@@ -22,7 +22,8 @@ async function Board({ params }: { params: Promise<{ raqam: string }> }) {
   const { raqam } = await params
   const task = (await storedTasks()).find((item) => item.raqam === raqam)
   if (!task) notFound()
-  if (user.rol === "koordinator" && user.tashkilot !== task.tashkilot) notFound()
+  const owns = (await documentOwners()).get(task.hujjat) === user.id
+  if (user.rol === "koordinator" && user.tashkilot !== task.tashkilot && !owns) notFound()
   if (user.rol === "ijrochi" && !user.topshiriqlar.includes(task.raqam)) notFound()
   const proof = (await storedEvidence()).find((item) => item.topshiriq === task.raqam)
   const image = proof?.tur === "jpg" || proof?.tur === "jpeg" || proof?.tur === "png"
@@ -65,8 +66,8 @@ async function Board({ params }: { params: Promise<{ raqam: string }> }) {
               <p className="text-xs text-muted-foreground">AI xulosasi rasmiy tasdiq emas. Qarorni ekspert qo'yadi.</p>
               <EvidenceCheck id={proof.id} canCheck={canCheckEvidence(user.rol)} canJudge={canJudgeEvidence(user.rol)} />
             </>
-          ) : canBringProof(user, task.tashkilot) ? <ProofUpload raqam={task.raqam} /> : <p className="text-sm text-muted-foreground">Dalil hali yuklanmagan. Uni topshiriq tushgan organ beradi.</p>}
-          {proof && canBringProof(user, task.tashkilot) ? <ProofUpload raqam={task.raqam} /> : null}
+          ) : canBringProof(user, task.tashkilot, owns) ? <ProofUpload raqam={task.raqam} /> : <p className="text-sm text-muted-foreground">Dalil hali yuklanmagan. Uni topshiriq tushgan organ beradi.</p>}
+          {proof && canBringProof(user, task.tashkilot, owns) ? <ProofUpload raqam={task.raqam} /> : null}
         </section>
       </div>
       <Link className="text-sm underline underline-offset-4" href="/topshiriqlar">Topshiriqlar</Link>

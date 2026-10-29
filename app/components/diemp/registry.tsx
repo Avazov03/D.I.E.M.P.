@@ -113,7 +113,7 @@ export function Registry({
                 {filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="px-4 py-8 text-sm text-muted-foreground">
-                      Bu filtr bo&apos;yicha yozuv yo&apos;q.
+                      {filters.length === 0 ? "Hali yozuv yo'q." : "Bu filtr bo'yicha yozuv yo'q."}
                     </TableCell>
                   </TableRow>
                 ) : filtered.map((row) => (

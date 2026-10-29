@@ -44,7 +44,7 @@ export default async function Page() {
       <Suspense>
         <Registry
           title="Mening topshiriqlarim"
-          description={`${organName(user.tashkilot || "")} ga tushgan topshiriq. Qatorni ochib, bajarilganlik faylini yuklang.`}
+          description={`${organName(user.tashkilot || "")} ga tushgan va siz kiritgan topshiriq. Qatorni ochib, bajarilganlik faylini yuklang.`}
           columns={taskColumns}
           rows={await taskRows(user)}
           filters={[]}
