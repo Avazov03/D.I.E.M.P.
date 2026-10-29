@@ -5,6 +5,7 @@ import { canBringProof } from "@/lib/diemp/task-rows"
 import { dataDir, documentOwners, replaceProof, setEvidenceNote, storedTasks } from "@/lib/diemp/db"
 import { isSecretText, readOffice } from "@/lib/diemp/read-file"
 import { currentUser } from "@/lib/diemp/session"
+import { decisionText, recordImpacts } from "@/lib/diemp/tasir"
 import { matchEvidence, matchText } from "@/lib/diemp/vision"
 
 const LIMIT = 8 * 1024 * 1024
@@ -73,6 +74,14 @@ export async function POST(request: Request, context: { params: Promise<{ raqam:
       } catch {
         // eski fayl allaqachon yo'q
       }
+    }
+  }
+
+  if (matn && /bajaril|to'liq|toliq|yakunlan|amalga oshir/i.test(matn)) {
+    try {
+      await recordImpacts(task.qaror, `${await decisionText(task.qaror)}\n${matn}`, "tasdiqlangan")
+    } catch {
+      // dalil saqlangan, statistika keyin qayta aniqlanadi
     }
   }
 

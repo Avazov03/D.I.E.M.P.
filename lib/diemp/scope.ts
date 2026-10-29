@@ -45,7 +45,7 @@ export async function tasksFor(user: User) {
     ...(await uploadedTasks()),
   ]
   if (user.rol === "koordinator" && user.tashkilot) return open.filter((row) => row.tashkilot === user.tashkilot)
-  if (user.rol === "ijrochi") return open.filter((row) => user.topshiriqlar.includes(row.raqam))
+  if (user.rol === "ijrochi") return open.filter((row) => row.manba === "Hujjat" || user.topshiriqlar.includes(row.raqam))
   return open
 }
 

@@ -26,7 +26,6 @@ export async function taskRows(user: User, onlyReview = false) {
   if (user.rol === "koordinator" && user.tashkilot) {
     tasks = tasks.filter((row) => row.tashkilot === user.tashkilot || owners.get(row.hujjat) === user.id)
   }
-  if (user.rol === "ijrochi") tasks = tasks.filter((row) => user.topshiriqlar.includes(row.raqam))
   const rows: DataRow[] = tasks.map((task) => {
     const proof = proofs.find((item) => item.topshiriq === task.raqam)
     return {

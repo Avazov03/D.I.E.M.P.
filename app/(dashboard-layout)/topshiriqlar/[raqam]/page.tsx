@@ -24,7 +24,6 @@ async function Board({ params }: { params: Promise<{ raqam: string }> }) {
   if (!task) notFound()
   const owns = (await documentOwners()).get(task.hujjat) === user.id
   if (user.rol === "koordinator" && user.tashkilot !== task.tashkilot && !owns) notFound()
-  if (user.rol === "ijrochi" && !user.topshiriqlar.includes(task.raqam)) notFound()
   const proof = (await storedEvidence()).find((item) => item.topshiriq === task.raqam)
   const image = proof?.tur === "jpg" || proof?.tur === "jpeg" || proof?.tur === "png"
   let proofText = ""

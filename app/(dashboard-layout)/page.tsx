@@ -39,7 +39,24 @@ export default async function Page() {
     total: visible.length,
   }
 
-  if (user.rol === "ijrochi") return <ExecutorCabinet ids={user.topshiriqlar} rows={rows} />
+  if (user.rol === "ijrochi") {
+    const assigned = rows.some((row) => user.topshiriqlar.includes(row.raqam))
+    return (
+      <Suspense>
+        {assigned ? <ExecutorCabinet ids={user.topshiriqlar} rows={rows} /> : (
+          <CabinetHeading rol="ijrochi" text="Yuklangan topshiriq va dalil. Rasmiy yopish ekspert qo'lida." />
+        )}
+        <Registry
+          title="Topshiriqlar"
+          description="Hujjatdan chiqqan topshiriq, dalil holati va AI izohi. Qatorni oching."
+          columns={taskColumns}
+          rows={await taskRows(user)}
+          filters={[]}
+          filename="topshiriqlar.csv"
+        />
+      </Suspense>
+    )
+  }
   if (user.rol === "koordinator") {
     return (
       <Suspense>
@@ -66,6 +83,14 @@ export default async function Page() {
           filters={[]}
           filename="tekshiruv.csv"
         />
+        <Registry
+          title="Barcha topshiriqlar"
+          description="Dalil tasdiqlangan yoki hali kelmagan topshiriq ham shu ro'yxatda qoladi."
+          columns={taskColumns}
+          rows={await taskRows(user)}
+          filters={[]}
+          filename="topshiriqlar.csv"
+        />
         <StatSection user={user} decisionsOnly />
       </Suspense>
     )
@@ -75,6 +100,16 @@ export default async function Page() {
       <>
         <CabinetHeading rol="tahlilchi" text="Monitoring, tendensiya va AI yordam. Rasmiy foiz kodda hisoblanadi." />
         <StatSection user={user} />
+        <Suspense>
+          <Registry
+            title="Topshiriqlar"
+            description="Yuklangan topshiriq, dalil va AI izohi."
+            columns={taskColumns}
+            rows={await taskRows(user)}
+            filters={[]}
+            filename="topshiriqlar.csv"
+          />
+        </Suspense>
         {namunaOchilgan() ? <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
           <div className="lg:col-span-7 col-span-12">
             <ExecutionChart series={series} />

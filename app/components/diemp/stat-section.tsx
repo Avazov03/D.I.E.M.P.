@@ -16,7 +16,6 @@ export async function StatSection({ user, decisionsOnly = false }: { user: User;
       return own || organ
     })
   }
-  if (user.rol === "ijrochi") decisions = []
   const views = decisionViews(decisions.map((decision) => ({ raqam: decision.raqam, nomi: decision.nomi, sana: decision.sana })), impacts)
   return (
     <div className="flex flex-col gap-6">

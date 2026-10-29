@@ -21,7 +21,7 @@ const rules: { id: StatId; keys: RegExp; quoted: RegExp }[] = [
   { id: "ishsizlik", keys: /ishsizlik/, quoted: /ming/ },
   { id: "tadbirkor", keys: /tadbirkor|korxona|yuridik shaxs|subyekt/, quoted: /ming kishi|foiz/ },
   { id: "faol", keys: /iqtisodiy faol/, quoted: /foiz/ },
-  { id: "band", keys: /ishchi norma|ish o['’`]?rin|shtat birlik|shtat|bandlik|xodim|ish bilan band/, quoted: /foiz/ },
+  { id: "band", keys: /ishchi norma|ish o['’`]?rn|shtat birlik|shtat|bandlik|xodim|ish bilan band/, quoted: /foiz/ },
 ]
 
 function fold(value: string) {
@@ -79,7 +79,10 @@ export function boardCards(impacts: ImpactInput[]) {
     havola: stat.havola,
     yil: stat.yil,
     chartBirlik: stat.chartBirlik,
-    qator: stat.qator.map((point) => ({ yil: String(point.yil), qiymat: point.qiymat })),
+    qator: [
+      ...stat.qator.map((point) => ({ yil: String(point.yil), qiymat: point.qiymat })),
+      ...(confirmedShift(stat, impacts) === 0 ? [] : [{ yil: "Hozir", qiymat: stat.id === "ishsizlik" ? Math.round(currentOf(stat, impacts) * 10) / 10 : currentOf(stat, impacts) }]),
+    ],
     joriy: formatCurrent(stat, impacts),
     tasdiq: sumText(stat, impacts, "tasdiqlangan") || "Tasdiqlangan ta'sir yo'q",
     taklif: sumText(stat, impacts, "taklif"),
@@ -161,15 +164,17 @@ export function proposalsFromText(text: string): Proposal[] {
     const keyIndex = sentence.search(rule.keys)
     numbers.sort((a, b) => Math.abs(a.index - keyIndex) - Math.abs(b.index - keyIndex))
     const pick = numbers.find((item) => {
-      if (rule.id === "ishsizlik") return item.value > 0 && item.value <= 20 && Math.abs(item.value - baselineOf(stat)) > 0.05
-      if (/ming/.test(sentence) && item.value >= 100) return false
-      if ((rule.id === "band" || rule.id === "faol") && item.value > 100000) return false
-      if (rule.id === "tadbirkor" && item.value > 100000) return false
+      if (rule.id === "ishsizlik") return item.value > 0 && item.value <= 5 && Math.abs(item.value - baselineOf(stat)) > 0.05
+      const quoted = /ming/.test(sentence) ? item.value : item.value * stat.impactScale
+      if (baselineOf(stat) > 0 && Math.abs(quoted - baselineOf(stat)) / baselineOf(stat) < 0.02) return false
+      const amount = /ming/.test(sentence) && item.value < 2000 ? item.value * 1000 : item.value
+      if ((rule.id === "band" || rule.id === "faol") && amount > 2000000) return false
+      if (rule.id === "tadbirkor" && amount > 500000) return false
       return numberInText(sentence, item.value)
     })
     if (!pick) continue
     let miqdor = pick.value
-    if ((rule.id === "band" || rule.id === "faol") && /ming/.test(sentence) && miqdor < 100) miqdor = Math.round(miqdor * 1000)
+    if (rule.id !== "ishsizlik" && /ming/.test(sentence) && miqdor < 2000) miqdor = Math.round(miqdor * 1000)
     if (found.some((item) => item.statistika === rule.id)) continue
     const at = sentence.indexOf(pick.raw.trim())
     const from = Math.max(0, at - 30)
@@ -183,11 +188,12 @@ export function acceptProposal(text: string, proposal: Proposal) {
   if (!stat) return false
   if (!(proposal.belgi === "+" || proposal.belgi === "-")) return false
   if (!Number.isFinite(proposal.miqdor) || proposal.miqdor <= 0) return false
-  if (proposal.statistika === "ishsizlik" && proposal.miqdor > 20) return false
-  if ((proposal.statistika === "band" || proposal.statistika === "faol") && proposal.miqdor > 100000) return false
-  if (proposal.statistika === "tadbirkor" && proposal.miqdor > 100000) return false
+  if (proposal.statistika === "ishsizlik" && proposal.miqdor > 5) return false
+  if ((proposal.statistika === "band" || proposal.statistika === "faol") && proposal.miqdor > 2000000) return false
+  if (proposal.statistika === "tadbirkor" && proposal.miqdor > 500000) return false
   const source = fold(text)
-  if (!numberInText(source, proposal.miqdor)) return false
+  const stated = numberInText(source, proposal.miqdor) || (proposal.miqdor >= 1000 && proposal.miqdor % 1000 === 0 && /ming/.test(source) && numberInText(source, proposal.miqdor / 1000))
+  if (!stated) return false
   const snippet = fold(proposal.parchasi)
   return snippet.length > 8 && source.includes(snippet)
 }
