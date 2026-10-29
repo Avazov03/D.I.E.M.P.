@@ -1,4 +1,5 @@
 import { decisions, evidence, kpis, reports, risks, visibleTasks, type DataRow } from "@/lib/diemp/sample"
+import { namunaOchilgan } from "@/lib/diemp/ttb"
 import { extraReports } from "@/lib/diemp/inbox"
 import { storedDecisions, storedEvidence, storedTasks } from "@/lib/diemp/db"
 import type { Role, User } from "@/lib/diemp/access"
@@ -40,7 +41,7 @@ function wide(rol: Role) {
 
 export async function tasksFor(user: User) {
   const open: DataRow[] = [
-    ...visibleTasks().map((row): DataRow => ({ ...row, manba: row.manba || "Namuna" })),
+    ...(namunaOchilgan() ? visibleTasks().map((row): DataRow => ({ ...row, manba: row.manba || "Namuna" })) : []),
     ...(await uploadedTasks()),
   ]
   if (user.rol === "koordinator" && user.tashkilot) return open.filter((row) => row.tashkilot === user.tashkilot)

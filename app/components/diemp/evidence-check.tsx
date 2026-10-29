@@ -51,7 +51,7 @@ export function EvidenceCheck({ id, canCheck, canJudge }: { id: string; canCheck
 
   return (
     <div className="flex flex-col gap-3">
-      {canCheck ? <Button type="button" disabled={loading} onClick={() => void check()}>{loading ? "Rasm ko'rilmoqda" : "AI rasmni tekshirsin"}</Button> : null}
+      {canCheck ? <Button type="button" disabled={loading} onClick={() => void check()}>{loading ? "Solishtirilmoqda" : "AI solishtirsin"}</Button> : null}
       {result ? (
         <div className="border border-border p-3 text-sm">
           <p>Ko'rindi: {result.nimaKorindi}</p>

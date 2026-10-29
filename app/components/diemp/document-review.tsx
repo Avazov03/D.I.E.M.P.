@@ -75,7 +75,7 @@ export function DocumentReview({
         setNote(data.xato || "Tasdiqlanmadi")
         return
       }
-      setNote("Tasdiqlandi. Topshiriqlar ro'yxatida manbasi Hujjat deb turadi.")
+      setNote("Tasdiqlandi. Topshiriqni ochib, bajarilganlik faylini yuklang.")
     } catch {
       setNote("Tasdiqlanmadi")
     } finally {

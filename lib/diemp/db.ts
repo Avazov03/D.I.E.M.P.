@@ -291,8 +291,32 @@ export async function evidenceById(id: string) {
 
 export async function setEvidenceStatus(id: string, holat: string) {
   const database = await open()
+  const row = one(database, "SELECT topshiriq FROM dalil WHERE id = ?", [id])
   database.run("UPDATE dalil SET holat = ? WHERE id = ?", [holat, id])
+  if (row) {
+    const taskStatus = holat === "tasdiqlangan" ? "yakunlangan" : holat === "yetishmaydi" ? "qaytarilgan" : "ijroda"
+    database.run("UPDATE topshiriq SET holat = ? WHERE raqam = ?", [taskStatus, text(row.topshiriq)])
+  }
   persist(database)
+}
+
+export async function setEvidenceNote(id: string, izoh: string) {
+  const database = await open()
+  database.run("UPDATE dalil SET izoh = ? WHERE id = ?", [izoh.slice(0, 500), id])
+  persist(database)
+}
+
+export async function replaceProof(row: { id: string; topshiriq: string; hujjat: string; nom: string; tur: string; fayl: string; izoh: string }) {
+  const database = await open()
+  const old = many(database, "SELECT fayl FROM dalil WHERE topshiriq = ?", [row.topshiriq])
+  database.run("DELETE FROM dalil WHERE topshiriq = ?", [row.topshiriq])
+  database.run(
+    "INSERT INTO dalil (id, topshiriq, hujjat, nom, tur, fayl, holat, izoh) VALUES (?, ?, ?, ?, ?, ?, 'tekshiruvda', ?)",
+    [row.id, row.topshiriq, row.hujjat, row.nom, row.tur, row.fayl, row.izoh.slice(0, 500)],
+  )
+  database.run("UPDATE topshiriq SET holat = 'ijroda' WHERE raqam = ?", [row.topshiriq])
+  persist(database)
+  return old.map((item) => text(item.fayl))
 }
 
 export async function readAssessmentJson() {

@@ -1,5 +1,6 @@
 import {
   ClipboardCheck,
+  ClipboardList,
   FileText,
   FileUp,
   Gauge,
@@ -52,6 +53,7 @@ const SidebarContent: MenuItem[] = [
     items: [
       { id: "dashboard", name: "Dashboard", icon: House, url: "/" },
       { id: "hujjatlar", name: "Hujjat yuklash", icon: FileUp, url: "/hujjatlar" },
+      { id: "topshiriq", name: "Topshiriqlar", icon: ClipboardList, url: "/topshiriqlar" },
       { id: "reyestr", name: "Reyestr", icon: FileText, url: "/reyestr" },
       { id: "baholash", name: "Baholash", icon: ListChecks, url: "/baholash" },
       { id: "hisobotlar", name: "Hisobotlar", icon: ClipboardCheck, url: "/hisobotlar" },

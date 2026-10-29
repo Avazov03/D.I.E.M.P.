@@ -28,10 +28,28 @@ function clip(value: unknown) {
   return typeof value === "string" ? value.trim().slice(0, 500) : ""
 }
 
+export async function matchText(task: string, proof: string): Promise<MatchResult> {
+  const key = process.env.GEMINI_API_KEY
+  if (!key) throw new Error("Kalit sozlanmagan")
+  const prompt = `Topshiriq matni:\n${task.slice(0, 1500)}\n\nDalil hujjati matni:\n${proof.slice(0, 6000)}\n\nDalil shu topshiriq bajarilganini ko'rsatadimi? Matnda yo'q faktni qo'shma.`
+  const system = `Sen topshiriq va dalil matnini solishtirasan.
+Qoidalar:
+- Faqat ikkala matnda bor faktni yoz.
+- Dalil topshiriqdagi ish bajarilganini aniq aytsa moslik "mos".
+- Boshqa ish haqida bo'lsa moslik "mos_emas".
+- Bajarilgani matndan chiqmasa moslik "aniqlanmagan".
+- Bu rasmiy tasdiq emas. Ekspert qaror qiladi.`
+  return askMatch(key, system, prompt, [])
+}
+
 export async function matchEvidence(task: string, note: string, mime: string, bytes: Buffer): Promise<MatchResult> {
   const key = process.env.GEMINI_API_KEY
   if (!key) throw new Error("Kalit sozlanmagan")
   const prompt = `Topshiriq: ${task}\nDalil izohi: ${note}\nRasmni ko'r va topshiriqqa dalil sifatida mosligini ayt.`
+  return askMatch(key, SYSTEM, prompt, [{ inlineData: { mimeType: mime, data: bytes.toString("base64") } }])
+}
+
+async function askMatch(key: string, system: string, prompt: string, extra: { inlineData: { mimeType: string; data: string } }[]): Promise<MatchResult> {
   let lastError = "AI hozir javob chegarasida. Birozdan keyin qayta bosing."
   for (const model of MODELS) {
     const generationConfig: Record<string, unknown> = {
@@ -47,13 +65,10 @@ export async function matchEvidence(task: string, note: string, mime: string, by
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM }] },
+          systemInstruction: { parts: [{ text: system }] },
           contents: [{
             role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: mime, data: bytes.toString("base64") } },
-            ],
+            parts: [{ text: prompt }, ...extra],
           }],
           generationConfig,
         }),
@@ -72,7 +87,7 @@ export async function matchEvidence(task: string, note: string, mime: string, by
     const raw = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? ""
     try {
       const parsed = JSON.parse(raw) as { nimaKorindi?: unknown; moslik?: unknown; sabab?: unknown }
-      const moslik = parsed.moslik === "mos" || parsed.moslik === "mos_emas" || parsed.moslik === "aniqlanmagan" ? parsed.moslik : "aniqlanmagan"
+      const moslik: MatchResult["moslik"] = parsed.moslik === "mos" || parsed.moslik === "mos_emas" || parsed.moslik === "aniqlanmagan" ? parsed.moslik : "aniqlanmagan"
       return { nimaKorindi: clip(parsed.nimaKorindi), moslik, sabab: clip(parsed.sabab) }
     } catch {
       continue

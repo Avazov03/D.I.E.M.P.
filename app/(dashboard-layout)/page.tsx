@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import StyleAwareWrapper from "@/app/components/shared/StyleAwareWrapper"
 import StyleDivider from "@/app/components/shared/StyleDivider"
-import { CabinetHeading, ExecutorCabinet, TaskCabinet } from "@/app/components/diemp/cabinets"
+import { CabinetHeading, ExecutorCabinet } from "@/app/components/diemp/cabinets"
+import { Registry } from "@/app/components/diemp/registry"
 import { ControlGrid } from "@/app/components/diemp/control-grid"
 import { DashboardHeading } from "@/app/components/diemp/dashboard-heading"
 import { EventsTable } from "@/app/components/diemp/events-table"
@@ -12,7 +13,9 @@ import { IndicatorGrid } from "@/app/components/diemp/indicator-grid"
 import { OrgTable } from "@/app/components/diemp/org-table"
 import { assessmentRows, averageBurden, averageNet, averageOutcome, countStatus, monthSeries, organName, statusShare, visibleAssessments } from "@/lib/diemp/ttb"
 import { loadAssessments } from "@/lib/diemp/ttb-live"
+import { taskColumns, taskRows } from "@/lib/diemp/task-rows"
 import { currentUser } from "@/lib/diemp/session"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
   title: "Kabinet",
@@ -37,10 +40,32 @@ export default async function Page() {
 
   if (user.rol === "ijrochi") return <ExecutorCabinet ids={user.topshiriqlar} rows={rows} />
   if (user.rol === "koordinator") {
-    return <TaskCabinet rol="koordinator" text={`${organName(user.tashkilot || "")} hujjatlari va baholashlari.`} organ={user.tashkilot} rows={rows} />
+    return (
+      <Suspense>
+        <Registry
+          title="Mening topshiriqlarim"
+          description={`${organName(user.tashkilot || "")} ga tushgan topshiriq. Qatorni ochib, bajarilganlik faylini yuklang.`}
+          columns={taskColumns}
+          rows={await taskRows(user)}
+          filters={[]}
+          filename="topshiriqlar.csv"
+        />
+      </Suspense>
+    )
   }
   if (user.rol === "nazorat") {
-    return <TaskCabinet rol="nazorat" text="Baholashlarni tekshirasiz va tasdiqlaysiz. AI xulosa rasmiy qaror emas." rows={rows} />
+    return (
+      <Suspense>
+        <Registry
+          title="Dalil tekshiruvi"
+          description="Dalil kelgan topshiriqni oching. Tasdiqlang yoki qaytaring. AI xulosasi qaror emas."
+          columns={taskColumns}
+          rows={await taskRows(user, true)}
+          filters={[]}
+          filename="tekshiruv.csv"
+        />
+      </Suspense>
+    )
   }
   if (user.rol === "tahlilchi") {
     return (
@@ -83,6 +108,18 @@ export default async function Page() {
         <StyleDivider wrapperClassName="col-span-12" />
         <div className="col-span-12">
           <EventsTable />
+        </div>
+        <div className="col-span-12">
+          <Suspense>
+            <Registry
+              title="Topshiriq kuzatuvi"
+              description="Har bir topshiriq, kimda ekani, dalil fayli, AI izohi va ekspert qarori."
+              columns={taskColumns}
+              rows={await taskRows(user)}
+              filters={[]}
+              filename="topshiriq-kuzatuv.csv"
+            />
+          </Suspense>
         </div>
         <StyleDivider wrapperClassName="col-span-12" />
         <div className="col-span-12">

@@ -127,6 +127,8 @@ export function Registry({
                               <a className="underline underline-offset-4" href={`/api/baholash/${raw}/fayl?tur=docx`}>Word</a>
                               <a className="underline underline-offset-4" href={`/api/baholash/${raw}/fayl?tur=pdf`}>PDF</a>
                             </span>
+                          ) : column.key === "raqam" && row.havola ? (
+                            <Link className="underline underline-offset-4" href={row.havola}>{displayValue(column.key, raw)}</Link>
                           ) : column.key === "raqam" && row.versiya ? (
                             <Link className="underline underline-offset-4" href={`/reyestr/${raw}`}>{displayValue(column.key, raw)}</Link>
                           ) : statusTone[raw] ? <StatusPill field={column.key} code={raw} /> : displayValue(column.key, raw)}

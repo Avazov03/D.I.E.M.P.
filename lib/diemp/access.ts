@@ -36,7 +36,7 @@ const grants: Record<Role, string[]> = {
   nazorat: ["/", "/hujjatlar", "/reyestr", "/baholash", "/hisobotlar", "/monitoring", "/audit", "/qarorlar", "/topshiriqlar"],
   koordinator: ["/", "/reyestr", "/baholash", "/hisobotlar", "/hujjatlar", "/qarorlar", "/topshiriqlar"],
   ijrochi: ["/", "/baholash", "/hisobotlar", "/topshiriqlar"],
-  tahlilchi: ["/", "/baholash", "/monitoring", "/tahlil", "/reyestr", "/kpi", "/xatarlar"],
+  tahlilchi: ["/", "/baholash", "/monitoring", "/tahlil", "/reyestr", "/topshiriqlar", "/kpi", "/xatarlar"],
 }
 
 export function findUser(pochta: string, parol: string) {

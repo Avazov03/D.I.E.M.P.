@@ -41,7 +41,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <EvidenceCheck id={row.id} canCheck={canCheckEvidence(user.rol)} canJudge={canJudgeEvidence(user.rol)} />
         </section>
       </div>
-      <Link className="text-sm underline underline-offset-4" href="/dalillar">Dalillar ro'yxati</Link>
+      <Link className="text-sm underline underline-offset-4" href="/topshiriqlar">Topshiriqlar</Link>
     </div>
   )
 }

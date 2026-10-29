@@ -36,6 +36,7 @@ test("baholovchi faqat o'z varaqalarini ko'radi", async ({ page }) => {
 
 test("koordinator faqat o'z organini ko'radi", async ({ page }) => {
   await kirish(page, "koordinator")
+  await page.goto("/baholash")
   await expect(page.getByText("BH-01")).toBeVisible()
   await expect(page.getByText("BH-02")).toHaveCount(0)
 })
