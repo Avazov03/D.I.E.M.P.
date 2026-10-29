@@ -5,6 +5,7 @@ import { Registry } from "@/app/components/diemp/registry"
 import { methodologyNote, monitoringColumns, monitoringFilters, monitoringRows } from "@/lib/diemp/ttb"
 import { loadAssessments } from "@/lib/diemp/ttb-live"
 import { taskColumns, taskRows } from "@/lib/diemp/task-rows"
+import { StatSection } from "@/app/components/diemp/stat-section"
 import { currentUser } from "@/lib/diemp/session"
 
 export const metadata: Metadata = { title: "Monitoring" }
@@ -14,6 +15,7 @@ export default async function Page() {
   if (!user) redirect("/auth/auth2/login")
   return (
     <div className="flex flex-col gap-6">
+      <StatSection user={user} />
       <Suspense>
         <Registry
           title="Topshiriq kuzatuvi"

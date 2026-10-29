@@ -2,10 +2,11 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { NextResponse } from "next/server"
 import { canCheckEvidence, canJudgeEvidence } from "@/lib/diemp/access"
-import { dataDir, evidenceById, setEvidenceNote, setEvidenceStatus, storedTasks } from "@/lib/diemp/db"
+import { dataDir, demoteImpacts, evidenceById, setEvidenceNote, setEvidenceStatus, storedTasks } from "@/lib/diemp/db"
 import { readOffice } from "@/lib/diemp/read-file"
 import { evidenceFilesFor } from "@/lib/diemp/scope"
 import { currentUser } from "@/lib/diemp/session"
+import { decisionText, recordImpacts } from "@/lib/diemp/tasir"
 import { matchEvidence, matchText } from "@/lib/diemp/vision"
 
 const idPattern = /^[a-z0-9-]{3,40}$/
@@ -58,6 +59,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return NextResponse.json({ xato: "Ma'lumot o'qilmadi" }, { status: 400 })
   }
   if (!statuses.has(holat)) return NextResponse.json({ xato: "Holat noto'g'ri" }, { status: 400 })
+  const row = await evidenceById(id)
   await setEvidenceStatus(id, holat)
+  const task = row ? (await storedTasks()).find((item) => item.raqam === row.topshiriq) : undefined
+  if (task && holat === "tasdiqlangan") {
+    try {
+      await recordImpacts(task.qaror, await decisionText(task.qaror), "tasdiqlangan")
+    } catch {
+      // dalil tasdig'i saqlangan
+    }
+  }
+  if (task && holat === "yetishmaydi") await demoteImpacts(task.qaror)
   return NextResponse.json({ ok: true, holat })
 }

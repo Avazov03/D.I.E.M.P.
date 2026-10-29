@@ -84,6 +84,15 @@ async function open() {
           id TEXT PRIMARY KEY,
           json TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS tasir (
+          id TEXT PRIMARY KEY,
+          qaror TEXT NOT NULL,
+          statistika TEXT NOT NULL,
+          belgi TEXT NOT NULL,
+          miqdor REAL NOT NULL,
+          parchasi TEXT NOT NULL,
+          holat TEXT NOT NULL
+        );
       `)
   for (const sql of [
     "ALTER TABLE topshiriq ADD COLUMN holat TEXT NOT NULL DEFAULT 'ijroda'",
@@ -331,6 +340,65 @@ export async function readAssessmentJson() {
   const rows = many(database, "SELECT id, json FROM baholash")
   database.close()
   return rows.map((row) => ({ id: text(row.id), json: text(row.json) }))
+}
+
+export type ImpactRow = {
+  id: string
+  qaror: string
+  statistika: string
+  belgi: "+" | "-"
+  miqdor: number
+  parchasi: string
+  holat: "taklif" | "tasdiqlangan" | "rad"
+}
+
+function impactFrom(row: Record<string, unknown>): ImpactRow {
+  const belgi = text(row.belgi) === "-" ? "-" : "+"
+  const holat = text(row.holat)
+  return {
+    id: text(row.id),
+    qaror: text(row.qaror),
+    statistika: text(row.statistika),
+    belgi,
+    miqdor: Number(row.miqdor) || 0,
+    parchasi: text(row.parchasi),
+    holat: holat === "tasdiqlangan" || holat === "rad" ? holat : "taklif",
+  }
+}
+
+export async function listImpacts() {
+  const database = await open()
+  const rows = many(database, "SELECT id, qaror, statistika, belgi, miqdor, parchasi, holat FROM tasir ORDER BY qaror")
+  database.close()
+  return rows.map((row) => impactFrom(row))
+}
+
+export async function saveImpacts(qaror: string, rows: { statistika: string; belgi: "+" | "-"; miqdor: number; parchasi: string }[], holat: "taklif" | "tasdiqlangan") {
+  const database = await open()
+  const rejected = new Set(many(database, "SELECT statistika FROM tasir WHERE qaror = ? AND holat = 'rad'", [qaror]).map((row) => text(row.statistika)))
+  database.run(holat === "taklif"
+    ? "DELETE FROM tasir WHERE qaror = ? AND holat = 'taklif'"
+    : "DELETE FROM tasir WHERE qaror = ? AND holat IN ('taklif', 'tasdiqlangan')", [qaror])
+  for (const row of rows) {
+    if (rejected.has(row.statistika)) continue
+    database.run(
+      "INSERT INTO tasir (id, qaror, statistika, belgi, miqdor, parchasi, holat) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [crypto.randomUUID(), qaror, row.statistika, row.belgi, row.miqdor, row.parchasi.slice(0, 240), holat],
+    )
+  }
+  persist(database)
+}
+
+export async function setImpactStatus(id: string, holat: "taklif" | "tasdiqlangan" | "rad") {
+  const database = await open()
+  database.run("UPDATE tasir SET holat = ? WHERE id = ?", [holat, id])
+  persist(database)
+}
+
+export async function demoteImpacts(qaror: string) {
+  const database = await open()
+  database.run("UPDATE tasir SET holat = 'taklif' WHERE qaror = ? AND holat = 'tasdiqlangan'", [qaror])
+  persist(database)
 }
 
 export async function writeAssessmentJson(id: string, json: string) {

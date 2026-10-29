@@ -3,6 +3,7 @@ import { canUpload } from "@/lib/diemp/access"
 import { confirmDocument, documentById, type Draft } from "@/lib/diemp/db"
 import { organizations } from "@/lib/diemp/sample"
 import { currentUser } from "@/lib/diemp/session"
+import { decisionText, recordImpacts } from "@/lib/diemp/tasir"
 
 const idPattern = /^[0-9a-f-]{36}$/i
 const numberPattern = /^[A-Za-z0-9][A-Za-z0-9-]{1,30}$/
@@ -46,5 +47,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const draft: Draft = { raqam, nomi: nomi.slice(0, 240), sana: sana.slice(0, 40), topshiriqlar, aniqlanmagan: [] }
   const result = await confirmDocument(id, draft)
   if (!result.ok) return NextResponse.json({ xato: result.xato }, { status: 409 })
+  try {
+    await recordImpacts(raqam, await decisionText(raqam), "taklif")
+  } catch {
+    // tasdiq saqlangan, statistika keyin qayta aniqlanadi
+  }
   return NextResponse.json({ ok: true, raqam })
 }

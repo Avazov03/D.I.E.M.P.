@@ -11,9 +11,10 @@ import { ExecutionChart } from "@/app/components/diemp/execution-chart"
 import { StatusShare } from "@/app/components/diemp/status-share"
 import { IndicatorGrid } from "@/app/components/diemp/indicator-grid"
 import { OrgTable } from "@/app/components/diemp/org-table"
-import { assessmentRows, averageBurden, averageNet, averageOutcome, countStatus, monthSeries, organName, statusShare, visibleAssessments } from "@/lib/diemp/ttb"
+import { assessmentRows, averageBurden, averageNet, averageOutcome, countStatus, monthSeries, namunaOchilgan, organName, statusShare, visibleAssessments } from "@/lib/diemp/ttb"
 import { loadAssessments } from "@/lib/diemp/ttb-live"
 import { taskColumns, taskRows } from "@/lib/diemp/task-rows"
+import { StatSection } from "@/app/components/diemp/stat-section"
 import { currentUser } from "@/lib/diemp/session"
 import { Suspense } from "react"
 
@@ -50,6 +51,7 @@ export default async function Page() {
           filters={[]}
           filename="topshiriqlar.csv"
         />
+        <StatSection user={user} decisionsOnly />
       </Suspense>
     )
   }
@@ -64,6 +66,7 @@ export default async function Page() {
           filters={[]}
           filename="tekshiruv.csv"
         />
+        <StatSection user={user} decisionsOnly />
       </Suspense>
     )
   }
@@ -71,7 +74,8 @@ export default async function Page() {
     return (
       <>
         <CabinetHeading rol="tahlilchi" text="Monitoring, tendensiya va AI yordam. Rasmiy foiz kodda hisoblanadi." />
-        <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
+        <StatSection user={user} />
+        {namunaOchilgan() ? <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
           <div className="lg:col-span-7 col-span-12">
             <ExecutionChart series={series} />
           </div>
@@ -81,7 +85,7 @@ export default async function Page() {
           <div className="col-span-12">
             <IndicatorGrid {...indicators} />
           </div>
-        </StyleAwareWrapper>
+        </StyleAwareWrapper> : null}
       </>
     )
   }
@@ -91,7 +95,8 @@ export default async function Page() {
       <div className="pb-4">
         <DashboardHeading name={user.ism} rows={rows} />
       </div>
-      <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
+      <StatSection user={user} />
+      {namunaOchilgan() ? <StyleAwareWrapper lyraClassName="grid grid-cols-12 p-px gap-px bg-border" defaultClassName="grid grid-cols-12 gap-4">
         <div className="col-span-12">
           <ControlGrid />
         </div>
@@ -125,7 +130,18 @@ export default async function Page() {
         <div className="col-span-12">
           <OrgTable />
         </div>
-      </StyleAwareWrapper>
+      </StyleAwareWrapper> : (
+        <Suspense>
+          <Registry
+            title="Topshiriq kuzatuvi"
+            description="Har bir topshiriq, kimda ekani, dalil fayli, AI izohi va ekspert qarori."
+            columns={taskColumns}
+            rows={await taskRows(user)}
+            filters={[]}
+            filename="topshiriq-kuzatuv.csv"
+          />
+        </Suspense>
+      )}
     </>
   )
 }
