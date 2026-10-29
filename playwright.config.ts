@@ -25,6 +25,7 @@ export default defineConfig({
     env: {
       ...process.env,
       DIEMP_DATA_DIR: dataDir,
+      DIEMP_NAMUNA: "1",
       TEMP: "D:\\tmp\\temp",
       TMP: "D:\\tmp\\temp",
     },

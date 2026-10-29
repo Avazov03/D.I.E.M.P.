@@ -4,8 +4,9 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DashboardCard } from "@/app/components/shared/dashboard-card"
 import { StatusPill } from "@/app/components/diemp/status-pill"
+import { namunaOchilgan } from "@/lib/diemp/ttb"
 
-const events = [
+const sampleEvents = [
   { vaqt: "28.10.2026 11:20", hodisa: "Baholash qaytarildi", obyekt: "BH-05", holat: "qaytarilgan", izoh: "Foyda hisobi tasdiqlanmadi", href: "/baholash/BH-05" },
   { vaqt: "27.10.2026 16:05", hodisa: "Ekspert tasdiqladi", obyekt: "BH-04", holat: "tasdiqlangan", izoh: "Keyingi TTB yakunlandi", href: "/baholash/BH-04" },
   { vaqt: "27.10.2026 10:40", hodisa: "Hisobot shakli kutmoqda", obyekt: "BH-01", holat: "tekshiruvda", izoh: "Uslubiyot shakli namuna", href: "/hisobotlar" },
@@ -15,6 +16,7 @@ const events = [
 ]
 
 export function EventsTable() {
+  const events = namunaOchilgan() ? sampleEvents : []
   return (
     <DashboardCard className="flex flex-col gap-0!">
       <CardHeader className="border-b border-border">
@@ -35,7 +37,11 @@ export function EventsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {events.map((event) => (
+            {events.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="px-4 py-8 text-sm text-muted-foreground">Hali hodisa yo&apos;q.</TableCell>
+              </TableRow>
+            ) : events.map((event) => (
               <TableRow key={event.vaqt + event.obyekt} className="border-border hover:bg-muted/30">
                 <TableCell className="px-4 py-3 text-sm">{event.vaqt}</TableCell>
                 <TableCell className="px-4 py-3 text-sm">

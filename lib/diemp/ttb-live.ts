@@ -1,7 +1,7 @@
 import { cache } from "react"
 import { canOpen, type User } from "@/lib/diemp/access"
 import { readAssessmentJson } from "@/lib/diemp/db"
-import { assessments, documentByNumber, type Assessment, type AssessmentStatus } from "@/lib/diemp/ttb"
+import { assessments, documentByNumber, namunaOchilgan, type Assessment, type AssessmentStatus } from "@/lib/diemp/ttb"
 
 const statuses = new Set<AssessmentStatus>(["qoralama", "tekshiruvda", "qaytarilgan", "tasdiqlangan", "monitoring"])
 
@@ -46,6 +46,7 @@ export function applySaved(base: Assessment, saved: unknown): Assessment {
 }
 
 export const loadAssessments = cache(async () => {
+  if (!namunaOchilgan()) return []
   const saved = await readAssessmentJson()
   const map = new Map<string, unknown>()
   for (const row of saved) {

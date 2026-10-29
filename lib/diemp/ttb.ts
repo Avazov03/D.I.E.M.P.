@@ -221,11 +221,17 @@ export function organName(kod: string) {
   return organs.find((item) => item.kod === kod)?.nom ?? kod
 }
 
+export function namunaOchilgan() {
+  return process.env.DIEMP_NAMUNA === "1"
+}
+
 export function visibleDocuments() {
+  if (!namunaOchilgan()) return []
   return documents.filter((row) => row.maxfiylik !== "maxfiy")
 }
 
 export function visibleAssessments(source: Assessment[] = assessments) {
+  if (!namunaOchilgan()) return []
   return source.filter((row) => {
     const doc = documents.find((item) => item.raqam === row.hujjat)
     return doc?.maxfiylik !== "maxfiy"
@@ -358,8 +364,8 @@ export function monitoringRows(source?: Assessment[]): DataRow[] {
 
 export function monthSeries() {
   const months = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt"]
-  const closedByMonth = [0, 0, 1, 0, 1, 0, 1, 0, 0, 1]
-  const draftByMonth = [1, 0, 0, 1, 0, 1, 0, 1, 0, 1]
+  const closedByMonth = namunaOchilgan() ? [0, 0, 1, 0, 1, 0, 1, 0, 0, 1] : months.map(() => 0)
+  const draftByMonth = namunaOchilgan() ? [1, 0, 0, 1, 0, 1, 0, 1, 0, 1] : months.map(() => 0)
   return months.map((oy, index) => ({
     oy,
     yopilgan: closedByMonth[index] ?? 0,
@@ -486,5 +492,6 @@ export function assessmentById(id: string) {
 }
 
 export function documentByNumber(raqam: string) {
+  if (!namunaOchilgan()) return null
   return documents.find((row) => row.raqam === raqam) ?? null
 }

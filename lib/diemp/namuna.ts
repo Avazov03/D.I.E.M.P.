@@ -84,6 +84,7 @@ function hasRow(database: Database, sql: string) {
 }
 
 export function seedNamuna(database: Database, dataDir: string) {
+  if (process.env.DIEMP_NAMUNA !== "1") return false
   const root = path.join(process.cwd(), "content", "namuna")
   if (!existsSync(path.join(root, "qaror-qr-11.docx"))) return false
   if (hasRow(database, "SELECT id FROM hujjat WHERE id = 'namuna-qr-11'")) return false
