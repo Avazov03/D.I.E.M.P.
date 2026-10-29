@@ -13,6 +13,7 @@ const mime: Record<string, string> = {
   png: "image/png",
   pdf: "application/pdf",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  doc: "application/msword",
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {

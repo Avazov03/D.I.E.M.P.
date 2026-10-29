@@ -32,13 +32,14 @@ export async function POST(request: Request) {
   if (file.size < 1 || file.size > LIMIT) return NextResponse.json({ xato: "Fayl 8 MB dan katta yoki bo'sh" }, { status: 400 })
 
   const lower = file.name.toLowerCase()
-  const tur = lower.endsWith(".pdf") ? "pdf" : lower.endsWith(".docx") ? "docx" : null
-  if (!tur) return NextResponse.json({ xato: "Faqat PDF yoki DOCX qabul qilinadi" }, { status: 400 })
+  const tur = lower.endsWith(".pdf") ? "pdf" : lower.endsWith(".docx") ? "docx" : lower.endsWith(".doc") ? "doc" : null
+  if (!tur) return NextResponse.json({ xato: "Faqat PDF yoki Word qabul qilinadi" }, { status: 400 })
 
   const bytes = Buffer.from(await file.arrayBuffer())
   const pdfOk = tur === "pdf" && bytes.subarray(0, 5).toString("latin1") === "%PDF-"
   const docxOk = tur === "docx" && bytes[0] === 0x50 && bytes[1] === 0x4b
-  if (!pdfOk && !docxOk) return NextResponse.json({ xato: "Fayl turi mos emas" }, { status: 400 })
+  const docOk = tur === "doc" && bytes[0] === 0xd0 && bytes[1] === 0xcf
+  if (!pdfOk && !docxOk && !docOk) return NextResponse.json({ xato: "Fayl turi mos emas" }, { status: 400 })
 
   let matn = ""
   try {

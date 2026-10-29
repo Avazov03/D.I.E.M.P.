@@ -22,11 +22,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const bytes = readFileSync(file)
   const type = row.tur === "pdf"
     ? "application/pdf"
-    : "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    : row.tur === "doc"
+      ? "application/msword"
+      : "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  const name = row.tur === "pdf" ? "hujjat.pdf" : row.tur === "doc" ? "hujjat.doc" : "hujjat.docx"
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
       "Content-Type": type,
-      "Content-Disposition": `inline; filename="${row.tur === "pdf" ? "hujjat.pdf" : "hujjat.docx"}"`,
+      "Content-Disposition": `inline; filename="${name}"`,
     },
   })
 }

@@ -33,17 +33,18 @@ export async function POST(request: Request, context: { params: Promise<{ raqam:
   if (file.size < 1 || file.size > LIMIT) return NextResponse.json({ xato: "Fayl 8 MB dan katta yoki bo'sh" }, { status: 400 })
 
   const lower = file.name.toLowerCase()
-  const tur = lower.endsWith(".pdf") ? "pdf" : lower.endsWith(".docx") ? "docx" : lower.endsWith(".png") ? "png" : lower.endsWith(".jpg") || lower.endsWith(".jpeg") ? "jpg" : null
+  const tur = lower.endsWith(".pdf") ? "pdf" : lower.endsWith(".docx") ? "docx" : lower.endsWith(".doc") ? "doc" : lower.endsWith(".png") ? "png" : lower.endsWith(".jpg") || lower.endsWith(".jpeg") ? "jpg" : null
   if (!tur) return NextResponse.json({ xato: "Faqat PDF, Word yoki rasm qabul qilinadi" }, { status: 400 })
 
   const bytes = Buffer.from(await file.arrayBuffer())
   const pdfOk = tur === "pdf" && bytes.subarray(0, 5).toString("latin1") === "%PDF-"
   const docxOk = tur === "docx" && bytes[0] === 0x50 && bytes[1] === 0x4b
+  const docOk = tur === "doc" && bytes[0] === 0xd0 && bytes[1] === 0xcf
   const imageOk = tur === "png" || tur === "jpg"
-  if (!pdfOk && !docxOk && !imageOk) return NextResponse.json({ xato: "Fayl turi mos emas" }, { status: 400 })
+  if (!pdfOk && !docxOk && !docOk && !imageOk) return NextResponse.json({ xato: "Fayl turi mos emas" }, { status: 400 })
 
   let matn = ""
-  if (tur === "pdf" || tur === "docx") {
+  if (tur === "pdf" || tur === "docx" || tur === "doc") {
     try {
       matn = await readDocument(tur, bytes)
     } catch {
@@ -81,7 +82,7 @@ export async function POST(request: Request, context: { params: Promise<{ raqam:
 
   if (!secret) {
     try {
-      const result = tur === "pdf" || tur === "docx"
+      const result = tur === "pdf" || tur === "docx" || tur === "doc"
         ? await matchText(task.matn, matn)
         : await matchEvidence(task.matn, file.name, tur === "png" ? "image/png" : "image/jpeg", bytes)
       await setEvidenceNote(id, noteOf(result))

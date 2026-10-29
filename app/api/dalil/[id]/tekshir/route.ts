@@ -25,13 +25,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const root = path.resolve(dataDir())
   const file = path.resolve(row.fayl)
   if (!file.startsWith(root + path.sep)) return NextResponse.json({ xato: "Topilmadi" }, { status: 404 })
-  const document = row.tur === "pdf" || row.tur === "docx"
+  const document = row.tur === "pdf" || row.tur === "docx" || row.tur === "doc"
   const image = row.tur === "jpg" || row.tur === "jpeg" || row.tur === "png"
   if (!document && !image) return NextResponse.json({ xato: "Bu faylni AI o'qimaydi" }, { status: 400 })
   try {
     const bytes = readFileSync(file)
     const result = document
-      ? await matchText(task?.matn || row.topshiriq, await readDocument(row.tur === "pdf" ? "pdf" : "docx", bytes))
+      ? await matchText(task?.matn || row.topshiriq, await readDocument(row.tur === "pdf" ? "pdf" : row.tur === "doc" ? "doc" : "docx", bytes))
       : await matchEvidence(task?.matn || row.topshiriq, row.izoh, row.tur === "png" ? "image/png" : "image/jpeg", bytes)
     const holat = result.moslik === "mos" ? "Mos" : result.moslik === "mos_emas" ? "Mos emas" : "Aniqlanmagan"
     await setEvidenceNote(id, `${holat}. ${result.nimaKorindi} ${result.sabab}`.replace(/\s+/g, " ").trim())

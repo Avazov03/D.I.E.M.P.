@@ -28,7 +28,7 @@ export function DocumentReview({
 }: {
   id: string
   nom: string
-  tur: "pdf" | "docx"
+  tur: "pdf" | "docx" | "doc"
   matn: string
   holat: string
   cheklov: string

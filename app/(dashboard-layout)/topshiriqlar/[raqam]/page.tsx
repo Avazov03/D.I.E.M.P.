@@ -27,12 +27,12 @@ async function Board({ params }: { params: Promise<{ raqam: string }> }) {
   const proof = (await storedEvidence()).find((item) => item.topshiriq === task.raqam)
   const image = proof?.tur === "jpg" || proof?.tur === "jpeg" || proof?.tur === "png"
   let proofText = ""
-  if (proof && (proof.tur === "pdf" || proof.tur === "docx")) {
+  if (proof && (proof.tur === "pdf" || proof.tur === "docx" || proof.tur === "doc")) {
     const root = path.resolve(dataDir())
     const file = path.resolve(proof.fayl)
     if (file.startsWith(root + path.sep)) {
       try {
-        proofText = await readDocument(proof.tur, readFileSync(file))
+        proofText = await readDocument(proof.tur === "pdf" ? "pdf" : proof.tur === "doc" ? "doc" : "docx", readFileSync(file))
       } catch {
         proofText = ""
       }

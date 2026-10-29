@@ -10,7 +10,7 @@ export type { Draft, DraftTask } from "@/lib/diemp/draft"
 export type StoredDocument = {
   id: string
   nom: string
-  tur: "pdf" | "docx"
+  tur: "pdf" | "docx" | "doc"
   fayl: string
   matn: string
   holat: string
@@ -158,7 +158,7 @@ export async function listDocuments() {
   return rows.map((row) => ({
     id: text(row.id),
     nom: text(row.nom),
-    tur: text(row.tur) as "pdf" | "docx",
+    tur: text(row.tur) === "pdf" ? "pdf" : text(row.tur) === "doc" ? "doc" : "docx",
     holat: text(row.holat),
     yuklovchi: text(row.yuklovchi),
     yaratilgan: text(row.yaratilgan),
@@ -175,7 +175,7 @@ export async function documentById(id: string): Promise<StoredDocument | null> {
   }
   const draft = one(database, "SELECT json FROM ajratma WHERE hujjat = ?", [id])
   database.close()
-  const tur = text(row.tur) === "pdf" ? "pdf" : "docx"
+  const tur = text(row.tur) === "pdf" ? "pdf" : text(row.tur) === "doc" ? "doc" : "docx"
   return {
     id: text(row.id),
     nom: text(row.nom),

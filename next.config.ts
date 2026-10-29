@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   },
   // Build-time React Compiler (pairs with turbopackRustReactCompiler)
   reactCompiler: true,
-  serverExternalPackages: ["sql.js"],
+  serverExternalPackages: ["sql.js", "word-extractor"],
 };
 
 export default nextConfig;

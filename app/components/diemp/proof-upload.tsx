@@ -32,8 +32,8 @@ export function ProofUpload({ raqam }: { raqam: string }) {
 
   return (
     <form className="flex flex-col gap-3" onSubmit={(event) => void submit(event)}>
-      <p className="text-sm text-muted-foreground">Bajarilganlik faylini shu topshiriqqa bog'lang. PDF, Word yoki rasm.</p>
-      <Input name="fayl" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" required />
+      <p className="text-sm text-muted-foreground">Bajarilganlik faylini shu topshiriqqa bog'lang. PDF, Word (.doc va .docx) yoki rasm.</p>
+      <Input name="fayl" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
       {note ? <p className="text-sm text-[#ec003f]">{note}</p> : null}
       <div>
         <Button type="submit" disabled={loading}>{loading ? "Yuklanmoqda" : "Dalilni yuklash"}</Button>

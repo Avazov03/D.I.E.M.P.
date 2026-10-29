@@ -1,9 +1,14 @@
 import mammoth from "mammoth"
+import WordExtractor from "word-extractor"
 import { extractText, getDocumentProxy } from "unpdf"
 
 const SECRET = /maxfiy|махфий|для служебного пользования|дсп/i
 
-export async function readDocument(kind: "pdf" | "docx", bytes: Buffer) {
+export async function readDocument(kind: "pdf" | "docx" | "doc", bytes: Buffer) {
+  if (kind === "doc") {
+    const extracted = await new WordExtractor().extract(bytes)
+    return extracted.getBody().replace(/\s+\n/g, "\n").trim()
+  }
   if (kind === "pdf") {
     const pdf = await getDocumentProxy(new Uint8Array(bytes))
     const result = await extractText(pdf, { mergePages: true })
